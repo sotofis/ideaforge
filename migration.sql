@@ -56,7 +56,16 @@ ALTER TABLE ideas ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES groups(id) O
 CREATE INDEX IF NOT EXISTS ideas_group_idx ON ideas (group_id) WHERE group_id IS NOT NULL;
 
 -- ============================================================
--- 3. ALL POLICIES (now that all tables exist)
+-- 3. HELPER FUNCTION (bypasses RLS to break recursion)
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.get_my_group_ids()
+RETURNS SETOF uuid AS $$
+  SELECT group_id FROM public.group_members WHERE user_id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- ============================================================
+-- 4. ALL POLICIES (using helper to avoid recursion)
 -- ============================================================
 
 DROP POLICY IF EXISTS "ideaforge_profiles_select" ON profiles;
@@ -67,7 +76,7 @@ CREATE POLICY "ideaforge_profiles_update" ON profiles FOR UPDATE USING (auth.uid
 
 DROP POLICY IF EXISTS "Members can view groups" ON groups;
 CREATE POLICY "Members can view groups" ON groups
-  FOR SELECT USING (id IN (SELECT group_id FROM group_members WHERE user_id = auth.uid()));
+  FOR SELECT USING (id IN (SELECT public.get_my_group_ids()));
 
 DROP POLICY IF EXISTS "Owner can update group" ON groups;
 CREATE POLICY "Owner can update group" ON groups FOR UPDATE USING (owner_id = auth.uid());
@@ -83,7 +92,7 @@ CREATE POLICY "Anyone can lookup by invite code" ON groups FOR SELECT USING (tru
 
 DROP POLICY IF EXISTS "Members can view memberships" ON group_members;
 CREATE POLICY "Members can view memberships" ON group_members
-  FOR SELECT USING (group_id IN (SELECT group_id FROM group_members gm WHERE gm.user_id = auth.uid()));
+  FOR SELECT USING (group_id IN (SELECT public.get_my_group_ids()));
 
 DROP POLICY IF EXISTS "Owner can manage members" ON group_members;
 CREATE POLICY "Owner can manage members" ON group_members
@@ -100,7 +109,7 @@ DROP POLICY IF EXISTS "Users can view own and group ideas" ON ideas;
 CREATE POLICY "Users can view own and group ideas" ON ideas
   FOR SELECT USING (
     auth.uid() = user_id
-    OR group_id IN (SELECT group_id FROM group_members WHERE user_id = auth.uid())
+    OR group_id IN (SELECT public.get_my_group_ids())
   );
 
 -- ============================================================

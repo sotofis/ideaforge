@@ -408,16 +408,20 @@ body{
   <div class="auth-box">
     <div class="logo-big">IdeaForge</div>
     <p class="tagline">Score your next big idea</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Log In</button>
+      <button class="auth-tab" data-tab="signup">Sign Up</button>
+    </div>
     <div class="auth-error" id="authError"></div>
     <div class="field">
       <label>Email</label>
-      <input type="email" id="authEmail" value="philipp.pattera@myles-innovation.com" autocomplete="email">
+      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
     </div>
     <div class="field">
       <label>Password</label>
       <input type="password" id="authPass" placeholder="Min. 6 characters" autocomplete="current-password">
     </div>
-    <button class="btn btn-pri" id="authSubmit">Sign In</button>
+    <button class="btn btn-pri" id="authSubmit">Log In</button>
   </div>
 </div>
 
@@ -557,51 +561,43 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 async function init() {
   try {
     sb = window.supabase.createClient(SB_URL, SB_KEY);
-  } catch (e) {
-    toast('Failed to connect to Supabase', 'error');
-    return;
-  }
-
-  // Timeout fallback if onAuthStateChange never fires
-  const splashTimeout = setTimeout(() => {
+    // Directly check session instead of relying on onAuthStateChange
+    const { data: { session }, error } = await sb.auth.getSession();
     $('#splash').classList.remove('active');
-    navigate('authScreen');
-  }, 5000);
 
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'INITIAL_SESSION') {
-      clearTimeout(splashTimeout);
-      $('#splash').classList.remove('active');
-      if (session) {
+    if (error) {
+      console.error('Session check failed:', error);
+      navigate('authScreen');
+      return;
+    }
+
+    if (session) {
+      state.user = session.user;
+      navigate('dashScreen');
+      loadIdeas(); // load in background
+    } else {
+      navigate('authScreen');
+    }
+
+    // Listen for future auth changes (login/logout during session)
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
         state.user = session.user;
         await loadIdeas();
         navigate('dashScreen');
-      } else {
+      } else if (event === 'SIGNED_OUT') {
+        state.user = null;
+        state.ideas = [];
         navigate('authScreen');
       }
-    } else if (event === 'SIGNED_IN') {
-      $('#splash').classList.remove('active');
-      state.user = session.user;
-      await loadIdeas();
-      navigate('dashScreen');
-    } else if (event === 'SIGNED_OUT') {
-      state.user = null;
-      state.ideas = [];
-      navigate('authScreen');
-    }
-  });
+    });
+  } catch (e) {
+    console.error('Init failed:', e);
+    $('#splash').classList.remove('active');
+    navigate('authScreen');
+    toast('Connection error — check console', 'error');
+  }
 }
-
-// ── Config ──
-$('#cfgSave').onclick = () => {
-  const url = $('#cfgUrl').value.trim();
-  const key = $('#cfgKey').value.trim();
-  if (!url || !key) { toast('Both fields required', 'error'); return; }
-  if (!url.startsWith('https://')) { toast('URL must start with https://', 'error'); return; }
-  localStorage.setItem('sb_url', url);
-  localStorage.setItem('sb_key', key);
-  init();
-};
 
 // ── Navigation ──
 function navigate(screenId) {
@@ -646,7 +642,18 @@ function toast(message, type = 'info') {
   }, 3000);
 }
 
-// ── Auth (login only) ──
+// ── Auth ──
+$$('.auth-tab').forEach((tab) => {
+  tab.onclick = () => {
+    $$('.auth-tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+    state.authMode = tab.dataset.tab;
+    $('#authSubmit').textContent = state.authMode === 'login' ? 'Log In' : 'Sign Up';
+    $('#authPass').autocomplete = state.authMode === 'login' ? 'current-password' : 'new-password';
+    $('#authError').classList.remove('show');
+  };
+});
+
 $('#authSubmit').onclick = async () => {
   const email = $('#authEmail').value.trim();
   const pass = $('#authPass').value;
@@ -654,24 +661,33 @@ $('#authSubmit').onclick = async () => {
   errEl.classList.remove('show');
 
   if (!email || !pass) { errEl.textContent = 'Email and password required.'; errEl.classList.add('show'); return; }
+  if (pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.classList.add('show'); return; }
 
   const btn = $('#authSubmit');
   btn.disabled = true;
-  btn.textContent = 'Signing in...';
+  btn.textContent = 'Please wait...';
   loading(true);
 
   try {
-    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-    if (error) {
-      errEl.textContent = error.message;
+    let result;
+    if (state.authMode === 'login') {
+      result = await sb.auth.signInWithPassword({ email, password: pass });
+    } else {
+      result = await sb.auth.signUp({ email, password: pass });
+    }
+
+    if (result.error) {
+      errEl.textContent = result.error.message;
       errEl.classList.add('show');
+    } else if (state.authMode === 'signup' && result.data.user && !result.data.session) {
+      toast('Check your email to confirm your account', 'info');
     }
   } catch (e) {
     errEl.textContent = 'Network error. Try again.';
     errEl.classList.add('show');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Sign In';
+    btn.textContent = state.authMode === 'login' ? 'Log In' : 'Sign Up';
     loading(false);
   }
 };

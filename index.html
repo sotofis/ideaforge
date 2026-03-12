@@ -204,6 +204,51 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .pricing-perks li::before{content:'✓';color:var(--pri);font-weight:700}
 .pricing-card .btn{margin-top:.5rem}
 
+/* ── Validation Progress Screen ── */
+#validationScreen{padding:0}
+.validation-content{flex:1;padding:1.25rem;padding-bottom:calc(var(--safe-bottom)+24px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.5rem}
+.val-anim{width:120px;height:120px;position:relative;margin-bottom:1rem}
+.val-ring{width:100%;height:100%;border-radius:50%;border:6px solid var(--dim);position:relative}
+.val-ring::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:6px solid transparent;border-top-color:var(--pri);animation:spin 1.2s linear infinite}
+.val-progress-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;color:var(--pri)}
+.val-status{font-size:1rem;font-weight:600;color:var(--text)}
+.val-substatus{font-size:.85rem;color:var(--muted);line-height:1.5;max-width:280px}
+.val-steps{width:100%;max-width:320px;display:flex;flex-direction:column;gap:.6rem;text-align:left;margin-top:1rem}
+.val-step{display:flex;align-items:center;gap:.75rem;font-size:.85rem;color:var(--muted);transition:color .3s}
+.val-step.active{color:var(--pri);font-weight:600}
+.val-step.done{color:var(--emerald)}
+.val-step-icon{width:24px;height:24px;border-radius:50%;border:2px solid var(--dim);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;transition:all .3s}
+.val-step.active .val-step-icon{border-color:var(--pri);background:rgba(108,99,255,.1)}
+.val-step.done .val-step-icon{border-color:var(--emerald);background:rgba(16,185,129,.15);color:var(--emerald)}
+
+/* ── Validation Report Screen ── */
+#reportScreen{padding:0;padding-bottom:calc(var(--safe-bottom)+24px)}
+.report-content{flex:1;padding:1.25rem}
+.report-header{text-align:center;margin-bottom:2rem}
+.report-rec{display:inline-block;padding:6px 18px;border-radius:20px;font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-top:.75rem}
+.rec-strong_yes,.rec-yes{background:rgba(16,185,129,.15);color:var(--emerald)}
+.rec-maybe{background:rgba(245,158,11,.15);color:var(--score2)}
+.rec-no,.rec-strong_no{background:rgba(239,68,68,.15);color:var(--red)}
+.report-scores{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:2rem}
+.report-score-card{background:var(--surf);border:1px solid var(--dim);border-radius:14px;padding:1rem;text-align:center}
+.report-score-card.full-width{grid-column:1/-1}
+.report-score-val{font-size:2rem;font-weight:900;line-height:1}
+.report-score-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-top:4px;font-weight:600}
+.report-section{background:var(--surf);border:1px solid var(--dim);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+.report-section h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--pri);margin-bottom:.75rem;font-weight:700}
+.report-section p,.report-section li{font-size:.88rem;color:var(--muted);line-height:1.6}
+.report-section ul{padding-left:1.25rem}
+.report-section li{margin-bottom:.4rem}
+.report-summary{font-size:.92rem;line-height:1.7;color:var(--text)}
+.validate-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.8rem;border-radius:14px;font-size:.9rem;font-weight:700;cursor:pointer;border:1.5px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);color:var(--pri);font-family:inherit;transition:all .2s;margin-top:1rem}
+.validate-btn:hover{background:rgba(108,99,255,.15);border-color:var(--pri)}
+.validate-btn:active{transform:scale(.97)}
+.validate-btn:disabled{opacity:.4;pointer-events:none}
+.validate-btn svg{width:18px;height:18px}
+.val-badge{font-size:.6rem;padding:2px 5px;border-radius:5px;font-weight:700;vertical-align:middle;margin-left:4px}
+.val-badge-complete{background:rgba(16,185,129,.15);color:var(--emerald)}
+.val-badge-pending{background:rgba(245,158,11,.15);color:var(--score2)}
+
 /* ── Ad Gate Modal ── */
 .ad-gate{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
 .ad-gate.show{opacity:1;pointer-events:auto}
@@ -394,6 +439,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="total-section"><div class="score-ring"><svg viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="42"/><circle class="ring-fg" id="ringFg" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"/></svg><div class="score-value"><div class="score-num" id="totalNum">–</div><div class="score-max">/12</div></div></div><div class="score-verdict" id="verdict"></div></div>
     <div class="form-actions"><button class="btn btn-pri" id="saveBtn" disabled>Save Idea</button></div>
     <div class="delete-zone" id="deleteZone" style="display:none"><button class="btn btn-danger" id="deleteBtn">Delete Idea</button></div>
+    <div id="validateZone" style="display:none;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--dim)">
+      <button class="validate-btn" id="validateBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        <span id="validateBtnText">Validate This Idea</span>
+      </button>
+      <div id="validateInfo" style="font-size:.75rem;color:var(--muted);text-align:center;margin-top:.5rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Validation Progress Screen -->
+<div class="screen slide-right" id="validationScreen">
+  <div class="form-header">
+    <button class="back-btn" id="valBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h2>Validating Idea</h2>
+  </div>
+  <div class="validation-content">
+    <div class="val-anim"><div class="val-ring"></div><div class="val-progress-num" id="valPercent">0%</div></div>
+    <div class="val-status" id="valStatus">Starting validation...</div>
+    <div class="val-substatus" id="valSubstatus">Our AI agents are researching your idea across multiple dimensions.</div>
+    <div class="val-steps">
+      <div class="val-step" id="valStep1"><div class="val-step-icon">1</div>Market Research</div>
+      <div class="val-step" id="valStep2"><div class="val-step-icon">2</div>Competition Analysis</div>
+      <div class="val-step" id="valStep3"><div class="val-step-icon">3</div>Need Validation</div>
+      <div class="val-step" id="valStep4"><div class="val-step-icon">4</div>Business Model</div>
+      <div class="val-step" id="valStep5"><div class="val-step-icon">5</div>Technical Feasibility</div>
+      <div class="val-step" id="valStep6"><div class="val-step-icon">6</div>Final Synthesis</div>
+    </div>
+  </div>
+</div>
+
+<!-- Validation Report Screen -->
+<div class="screen slide-right" id="reportScreen">
+  <div class="form-header">
+    <button class="back-btn" id="reportBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h2>Validation Report</h2>
+  </div>
+  <div class="report-content" id="reportContent">
+    <!-- Filled dynamically -->
   </div>
 </div>
 
@@ -648,13 +732,16 @@ function renderIdeas(){
   list.innerHTML=ideas.map(function(idea,i){
     var groupBadge=idea.group_id&&groupMap[idea.group_id]?'<span class="card-group-badge">'+esc(groupMap[idea.group_id])+'</span>':'';
     var noteIcon=idea.notes?'<span class="card-note-icon" title="Has notes">📝</span>':'';
-    return'<div class="idea-card" data-id="'+idea.id+'" style="animation-delay:'+(i*50)+'ms"><div class="card-score" style="background:'+scoreColor(idea.total_score)+'">'+idea.total_score+'<small>/12</small></div><div class="card-body"><div class="card-problem">'+esc(idea.problem)+'</div><div class="card-meta"><div class="mini-scores"><div class="mini-pill" style="background:'+pillColor(idea.impact)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.size)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.motivation)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.feasibility)+'"></div></div>'+noteIcon+groupBadge+'<span class="card-date">'+timeAgo(idea.created_at)+'</span></div></div></div>'
+    var valBadge='';
+    if(idea.validation_status==='complete')valBadge='<span class="val-badge val-badge-complete">AI: '+( idea.ai_overall_score||'?')+'/10</span>';
+    else if(idea.validation_status==='pending')valBadge='<span class="val-badge val-badge-pending">Validating...</span>';
+    return'<div class="idea-card" data-id="'+idea.id+'" style="animation-delay:'+(i*50)+'ms"><div class="card-score" style="background:'+scoreColor(idea.total_score)+'">'+idea.total_score+'<small>/12</small></div><div class="card-body"><div class="card-problem">'+esc(idea.problem)+valBadge+'</div><div class="card-meta"><div class="mini-scores"><div class="mini-pill" style="background:'+pillColor(idea.impact)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.size)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.motivation)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.feasibility)+'"></div></div>'+noteIcon+groupBadge+'<span class="card-date">'+timeAgo(idea.created_at)+'</span></div></div></div>'
   }).join('');
   list.querySelectorAll('.idea-card').forEach(function(c){c.onclick=function(){openEdit(c.dataset.id)}});
 }
 
 // ── Form ──
-function resetForm(){state.editingId=null;state.scores={impact:0,size:0,motivation:0,feasibility:0};$('#hmwInput').value='';$('#notesInput').value='';$('#notesCount').textContent='0';$$('.score-btn').forEach(function(b){b.classList.remove('sel-1','sel-2','sel-3')});updateTotalDisplay();$('#formTitle').textContent='New Idea';$('#deleteZone').style.display='none';$('#saveBtn').disabled=true;$('#groupSelect').value='';populateGroupSelect()}
+function resetForm(){state.editingId=null;state.scores={impact:0,size:0,motivation:0,feasibility:0};$('#hmwInput').value='';$('#notesInput').value='';$('#notesCount').textContent='0';$$('.score-btn').forEach(function(b){b.classList.remove('sel-1','sel-2','sel-3')});updateTotalDisplay();$('#formTitle').textContent='New Idea';$('#deleteZone').style.display='none';$('#validateZone').style.display='none';$('#saveBtn').disabled=true;$('#groupSelect').value='';populateGroupSelect()}
 function populateGroupSelect(){var sel=$('#groupSelect');sel.innerHTML='<option value="">Personal</option>';state.groups.forEach(function(g){sel.innerHTML+='<option value="'+g.id+'">'+esc(g.name)+'</option>'})}
 
 var FREE_IDEA_LIMIT=10;
@@ -670,7 +757,7 @@ function openEdit(id){
   $('#hmwInput').value=idea.problem;$('#notesInput').value=idea.notes||'';$('#notesCount').textContent=(idea.notes||'').length;$('#formTitle').textContent='Edit Idea';$('#deleteZone').style.display='block';
   if(idea.group_id)$('#groupSelect').value=idea.group_id;
   ['impact','size','motivation','feasibility'].forEach(function(f){var v=state.scores[f];var c=document.querySelector('.score-options[data-field="'+f+'"]');c.querySelectorAll('.score-btn').forEach(function(b){b.classList.remove('sel-1','sel-2','sel-3');if(parseInt(b.dataset.value)===v)b.classList.add('sel-'+v)})});
-  updateTotalDisplay();showScreen('formScreen');
+  updateTotalDisplay();updateValidateBtn();showScreen('formScreen');
 }
 $$('.score-options').forEach(function(g){g.querySelectorAll('.score-btn').forEach(function(b){b.onclick=function(){var f=g.dataset.field,v=parseInt(b.dataset.value);state.scores[f]=v;g.querySelectorAll('.score-btn').forEach(function(x){x.classList.remove('sel-1','sel-2','sel-3')});b.classList.add('sel-'+v);updateTotalDisplay();validateForm()}})});
 function updateTotalDisplay(){var s=state.scores,ok=s.impact&&s.size&&s.motivation&&s.feasibility,t=s.impact+s.size+s.motivation+s.feasibility,n=$('#totalNum'),r=$('#ringFg'),v=$('#verdict');if(!ok){n.textContent='–';n.style.color='var(--muted)';r.style.strokeDashoffset='264';r.style.stroke='var(--dim)';v.textContent='';v.style.background='none';return}n.textContent=t;var c=scoreColor(t);n.style.color=c;r.style.stroke=c;r.style.strokeDashoffset=264-(264*((t-4)/8));var labels={4:'Needs work',5:'Needs work',6:'Has potential',7:'Has potential',8:'Looking good',9:'Looking good',10:'Strong idea',11:'Strong idea',12:'Go for it!'};v.textContent=labels[t]||'';v.style.color=c;v.style.background='var(--surf)'}
@@ -763,6 +850,194 @@ function joinGroupByCode(code){
     else{toast('Joined '+r.data.group_name+'!','success');loadGroups()}
     loading(false);
   });
+}
+
+// ── Validation ──
+var currentValJobId=null,valChannel=null;
+
+$('#validateBtn').onclick=function(){
+  if(!state.editingId){toast('Save the idea first','error');return}
+  var idea=state.ideas.find(function(x){return x.id===state.editingId});
+  if(!idea)return;
+  if(idea.validation_status==='complete'){viewReport(idea.id);return}
+  if(idea.validation_status==='pending'){toast('Validation already in progress','info');return}
+  triggerValidation(idea.id);
+};
+
+$('#valBack').onclick=function(){showScreen('formScreen')};
+$('#reportBack').onclick=function(){showScreen('formScreen')};
+
+function triggerValidation(ideaId){
+  loading(true);
+  sb.auth.getSession().then(function(r){
+    var token=r.data.session.access_token;
+    fetch('/api/validate-idea',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({ideaId:ideaId})
+    }).then(function(r){return r.json()}).then(function(data){
+      loading(false);
+      if(data.error){toast(data.error,'error');return}
+      currentValJobId=data.jobId;
+      // Update local state
+      var idea=state.ideas.find(function(x){return x.id===ideaId});
+      if(idea)idea.validation_status='pending';
+      renderIdeas();
+      showValidationProgress(data.jobId,ideaId);
+    }).catch(function(e){loading(false);toast('Validation failed: '+e.message,'error')});
+  });
+}
+
+function showValidationProgress(jobId,ideaId){
+  showScreen('validationScreen');
+  updateValUI(0,'Starting validation...','Our AI agents are analyzing your idea...');
+  // Reset steps
+  for(var i=1;i<=6;i++){var s=$('#valStep'+i);s.classList.remove('active','done')}
+  // Subscribe to realtime updates
+  if(valChannel)sb.removeChannel(valChannel);
+  valChannel=sb.channel('val-'+jobId)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'validation_jobs',filter:'id=eq.'+jobId},function(payload){
+      var job=payload.new;
+      var pct=job.progress||0;
+      updateValUI(pct,statusLabel(job.status),statusDesc(pct));
+      updateValSteps(pct);
+      if(job.status==='complete'){
+        setTimeout(function(){
+          sb.removeChannel(valChannel);valChannel=null;
+          var idea=state.ideas.find(function(x){return x.id===ideaId});
+          if(idea){idea.validation_status='complete';idea.ai_overall_score=job.ai_overall_score}
+          renderIdeas();
+          viewReport(ideaId);
+        },800);
+      }
+      if(job.status==='failed'){
+        sb.removeChannel(valChannel);valChannel=null;
+        toast('Validation failed: '+(job.error_message||'Unknown error'),'error');
+        var idea=state.ideas.find(function(x){return x.id===ideaId});
+        if(idea)idea.validation_status='failed';
+        renderIdeas();
+      }
+    }).subscribe();
+  // Also poll as fallback every 5s
+  var pollIv=setInterval(function(){
+    if(!currentValJobId){clearInterval(pollIv);return}
+    fetch('/api/validation-status?jobId='+jobId,{headers:{'Authorization':'Bearer '+sb.auth.session?.()?.access_token}})
+      .then(function(r){return r.json()}).then(function(data){
+        if(data.status==='complete'||data.status==='failed')clearInterval(pollIv);
+      }).catch(function(){});
+  },5000);
+}
+
+function updateValUI(pct,status,desc){
+  $('#valPercent').textContent=pct+'%';
+  $('#valStatus').textContent=status;
+  $('#valSubstatus').textContent=desc;
+}
+function updateValSteps(pct){
+  var thresholds=[{id:1,at:15},{id:2,at:30},{id:3,at:45},{id:4,at:60},{id:5,at:75},{id:6,at:90}];
+  thresholds.forEach(function(t){
+    var el=$('#valStep'+t.id);
+    if(pct>=t.at+10)el.classList.add('done');
+    else if(pct>=t.at){el.classList.add('active');el.classList.remove('done')}
+  });
+}
+function statusLabel(s){return{pending:'Starting...',researching:'Researching...',analyzing:'Analyzing...',complete:'Complete!',failed:'Failed'}[s]||s}
+function statusDesc(pct){
+  if(pct<15)return'Preparing AI research agents...';
+  if(pct<30)return'Analyzing market size, trends, and growth potential...';
+  if(pct<45)return'Scanning the competitive landscape...';
+  if(pct<60)return'Searching for user pain points and demand signals...';
+  if(pct<75)return'Evaluating business model viability...';
+  if(pct<90)return'Assessing technical complexity and feasibility...';
+  if(pct<100)return'Synthesizing findings into your report...';
+  return'Your validation report is ready!';
+}
+
+function viewReport(ideaId){
+  loading(true);
+  sb.auth.getSession().then(function(r){
+    var token=r.data.session.access_token;
+    fetch('/api/validation-report?ideaId='+ideaId,{headers:{'Authorization':'Bearer '+token}})
+      .then(function(r){return r.json()}).then(function(report){
+        loading(false);
+        if(report.error){toast(report.error,'error');return}
+        renderReport(report);
+        showScreen('reportScreen');
+      }).catch(function(e){loading(false);toast('Failed to load report','error')});
+  });
+}
+
+function renderReport(r){
+  var recLabel={strong_yes:'Strong Yes',yes:'Yes — Go For It',maybe:'Maybe — Needs Work',no:'Probably Not',strong_no:'Hard No'};
+  function scoreColor10(v){if(v<=3)return'var(--red)';if(v<=5)return'var(--orange)';if(v<=7)return'var(--yellow)';return'var(--emerald)'}
+  function renderList(arr){if(!arr||!arr.length)return'<p>No data available.</p>';return'<ul>'+arr.map(function(x){return'<li>'+esc(x)+'</li>'}).join('')+'</ul>'}
+  function renderJSON(obj,fields){if(!obj)return'<p>No data available.</p>';var html='';fields.forEach(function(f){if(obj[f.key]){if(Array.isArray(obj[f.key]))html+='<p><strong>'+f.label+':</strong></p>'+renderList(obj[f.key]);else html+='<p><strong>'+f.label+':</strong> '+esc(String(obj[f.key]))+'</p>'}});return html}
+
+  var html='<div class="report-header"><h2>'+esc(r.executive_summary?'Validation Report':'Report')+'</h2>';
+  if(r.recommendation)html+='<div class="report-rec rec-'+r.recommendation+'">'+(recLabel[r.recommendation]||r.recommendation)+'</div>';
+  html+='</div>';
+
+  // Scores grid
+  html+='<div class="report-scores">';
+  [{k:'market_score',l:'Market'},{k:'competition_score',l:'Competition'},{k:'need_score',l:'Need/Demand'},{k:'business_score',l:'Business Model'},{k:'technical_score',l:'Technical'}].forEach(function(s){
+    var v=r[s.k]||0;
+    html+='<div class="report-score-card"><div class="report-score-val" style="color:'+scoreColor10(v)+'">'+v+'</div><div class="report-score-label">'+s.l+'</div></div>';
+  });
+  var ov=r.overall_score||0;
+  html+='<div class="report-score-card full-width"><div class="report-score-val" style="color:'+scoreColor10(ov)+';font-size:2.5rem">'+ov+'/10</div><div class="report-score-label">Overall Score</div></div>';
+  html+='</div>';
+
+  // Executive Summary
+  if(r.executive_summary){
+    html+='<div class="report-section"><h3>Executive Summary</h3><p class="report-summary">'+esc(r.executive_summary)+'</p></div>';
+  }
+
+  // Detailed sections
+  if(r.market_analysis){
+    html+='<div class="report-section"><h3>Market Analysis</h3>'+renderJSON(r.market_analysis,[{key:'size',label:'Market Size'},{key:'growth_rate',label:'Growth Rate'},{key:'tam',label:'TAM'},{key:'sam',label:'SAM'},{key:'som',label:'SOM'},{key:'trends',label:'Key Trends'},{key:'summary',label:'Summary'}])+'</div>';
+  }
+  if(r.competition){
+    var comp=r.competition;
+    html+='<div class="report-section"><h3>Competition</h3>';
+    if(comp.summary)html+='<p>'+esc(comp.summary)+'</p>';
+    if(comp.gap_analysis)html+='<p><strong>Gap Analysis:</strong> '+esc(comp.gap_analysis)+'</p>';
+    if(Array.isArray(comp)&&comp.length){comp.forEach(function(c){html+='<p><strong>'+esc(c.name||'Competitor')+'</strong>'+(c.pricing?' — '+esc(c.pricing):'')+'</p>';if(c.strengths)html+='<p style="font-size:.8rem;color:var(--muted)">Strengths: '+esc(c.strengths)+'</p>';if(c.weaknesses)html+='<p style="font-size:.8rem;color:var(--muted)">Weaknesses: '+esc(c.weaknesses)+'</p>'})}
+    html+='</div>';
+  }
+  if(r.need_validation){
+    html+='<div class="report-section"><h3>Need Validation</h3>'+renderJSON(r.need_validation,[{key:'demand_level',label:'Demand Level'},{key:'sentiment',label:'Sentiment'},{key:'pain_points',label:'Pain Points'},{key:'evidence',label:'Evidence'},{key:'summary',label:'Summary'}])+'</div>';
+  }
+  if(r.business_model){
+    html+='<div class="report-section"><h3>Business Model</h3>'+renderJSON(r.business_model,[{key:'suggested_models',label:'Suggested Models'},{key:'revenue_potential',label:'Revenue Potential'},{key:'pricing_strategy',label:'Pricing Strategy'},{key:'risks',label:'Risks'},{key:'summary',label:'Summary'}])+'</div>';
+  }
+  if(r.technical_feasibility){
+    html+='<div class="report-section"><h3>Technical Feasibility</h3>'+renderJSON(r.technical_feasibility,[{key:'complexity',label:'Complexity'},{key:'suggested_stack',label:'Suggested Stack'},{key:'timeline',label:'Timeline'},{key:'key_challenges',label:'Key Challenges'},{key:'mvp_features',label:'MVP Features'},{key:'summary',label:'Summary'}])+'</div>';
+  }
+
+  $('#reportContent').innerHTML=html;
+}
+
+// Update validate button state when editing
+function updateValidateBtn(){
+  var zone=$('#validateZone'),btn=$('#validateBtn'),text=$('#validateBtnText'),info=$('#validateInfo');
+  if(!state.editingId){zone.style.display='none';return}
+  zone.style.display='block';
+  var idea=state.ideas.find(function(x){return x.id===state.editingId});
+  if(!idea)return;
+  if(idea.validation_status==='complete'){
+    text.textContent='View Validation Report';
+    info.textContent='AI score: '+(idea.ai_overall_score||'?')+'/10';
+    btn.disabled=false;
+  }else if(idea.validation_status==='pending'){
+    text.textContent='Validation in Progress...';
+    info.textContent='';
+    btn.disabled=true;
+  }else{
+    text.textContent='Validate This Idea';
+    var credits=state.profile?state.profile.validation_credits:0;
+    info.textContent=credits+' validation'+(credits!==1?'s':'')+' remaining';
+    btn.disabled=!isPaid()&&credits<=0;
+  }
 }
 
 // ── Bottom Nav ──

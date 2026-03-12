@@ -8,6 +8,9 @@ interface RequestBody {
   jobId: string
   ideaId: string
   problem: string
+  audience: string
+  advantage: string
+  clarifyAnswer: string
 }
 
 interface MarketResearch {
@@ -165,32 +168,35 @@ function parseJSON<T>(raw: string): T {
 // ---------------------------------------------------------------------------
 
 async function marketResearch(problem: string): Promise<MarketResearch> {
-  const snippets = await braveSearch(`${problem} market size trends 2025 2026`)
+  const firstLine = problem.split('\n')[0].replace('Problem: ', '')
+  const snippets = await braveSearch(`${firstLine} market size trends 2025 2026`)
 
   const system =
     'You are a market research analyst. Analyze these search results about a business idea and return JSON with: { size: string, growth_rate: string, trends: string[], tam: string, sam: string, som: string, summary: string }. Be specific with numbers when data supports it. Return ONLY valid JSON, no markdown.'
 
-  const raw = await callClaude(system, `Search results:\n\n${snippets}\n\nBusiness idea / problem:\n${problem}`)
+  const raw = await callClaude(system, `Search results:\n\n${snippets}\n\nBusiness idea context:\n${problem}`)
   return parseJSON<MarketResearch>(raw)
 }
 
 async function competitionAnalysis(problem: string): Promise<CompetitionAnalysis> {
-  const snippets = await braveSearch(`${problem} competitors existing solutions pricing reviews`)
+  const firstLine = problem.split('\n')[0].replace('Problem: ', '')
+  const snippets = await braveSearch(`${firstLine} competitors existing solutions pricing reviews`)
 
   const system =
     'You are a competitive intelligence analyst. Analyze these search results and return JSON with: { competitors: [{ name, url, pricing, strengths, weaknesses, market_share }], summary: string, gap_analysis: string }. Return ONLY valid JSON, no markdown.'
 
-  const raw = await callClaude(system, `Search results:\n\n${snippets}\n\nBusiness idea / problem:\n${problem}`)
+  const raw = await callClaude(system, `Search results:\n\n${snippets}\n\nBusiness idea context:\n${problem}`)
   return parseJSON<CompetitionAnalysis>(raw)
 }
 
 async function needValidation(problem: string): Promise<NeedValidation> {
-  const snippets = await braveSearch(`${problem} frustration complaints need reddit forum`)
+  const firstLine = problem.split('\n')[0].replace('Problem: ', '')
+  const snippets = await braveSearch(`${firstLine} frustration complaints need reddit forum`)
 
   const system =
     'You are a user research analyst. Analyze these search results for evidence of real user need and return JSON with: { pain_points: string[], evidence: string[], sentiment: string, demand_level: string, summary: string }. Return ONLY valid JSON, no markdown.'
 
-  const raw = await callClaude(system, `Search results:\n\n${snippets}\n\nBusiness idea / problem:\n${problem}`)
+  const raw = await callClaude(system, `Search results:\n\n${snippets}\n\nBusiness idea context:\n${problem}`)
   return parseJSON<NeedValidation>(raw)
 }
 
@@ -234,10 +240,10 @@ async function synthesize(
 ): Promise<Synthesis> {
   const system =
     'You are a startup advisor synthesizing research about a business idea. Given the 5 research reports, produce:\n' +
-    '1. A score from 1-10 for each dimension (market, competition favorability, need/demand, business model viability, technical feasibility)\n' +
-    '2. An executive summary (2-3 paragraphs)\n' +
+    '1. A score from 1-5 for each dimension (market opportunity, competition favorability, need/demand validation, business model viability, technical feasibility). 1=very weak, 2=weak, 3=moderate, 4=strong, 5=exceptional.\n' +
+    '2. An executive summary (2-3 paragraphs) that directly addresses the specific problem, target audience, and unfair advantage provided.\n' +
     '3. A recommendation: strong_yes, yes, maybe, no, or strong_no\n' +
-    'Return as JSON: { market_score, competition_score, need_score, business_score, technical_score, executive_summary, recommendation }. Return ONLY valid JSON, no markdown.'
+    'Return as JSON: { market_score, competition_score, need_score, business_score, technical_score, executive_summary, recommendation }. Scores must be integers 1-5. Return ONLY valid JSON, no markdown.'
 
   const reports = [
     `Problem: ${problem}`,
@@ -273,7 +279,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     // 1. Parse request body
-    const { jobId: jid, ideaId, problem } = (await req.json()) as RequestBody
+    const { jobId: jid, ideaId, problem, audience, advantage, clarifyAnswer } = (await req.json()) as RequestBody
     jobId = jid
 
     if (!jobId || !ideaId || !problem) {
@@ -282,6 +288,14 @@ Deno.serve(async (req: Request) => {
         { status: 400, headers: { 'Content-Type': 'application/json' } },
       )
     }
+
+    // Build rich context from user inputs
+    const ideaContext = [
+      `Problem: ${problem}`,
+      audience ? `Target audience: ${audience}` : '',
+      advantage ? `Unfair advantage: ${advantage}` : '',
+      clarifyAnswer ? `Additional context: ${clarifyAnswer}` : '',
+    ].filter(Boolean).join('\n')
 
     // 2. Update job → researching
     await supabase
@@ -313,20 +327,16 @@ Deno.serve(async (req: Request) => {
       console.error('Failed to fetch idea:', ideaError)
     }
 
-    const fullProblem = idea?.description
-      ? `${problem}\n\nAdditional context: ${idea.description}`
-      : problem
-
     // 4. Run the 5 research tasks in parallel
     //    Tasks a-c are independent; d depends on a & b; e is independent.
     //    We run a, b, c, e in parallel first, then d with their results.
 
     // Phase 1 — independent tasks
     const [marketResult, competitionResult, needResult, technicalResult] = await Promise.allSettled([
-      marketResearch(fullProblem),
-      competitionAnalysis(fullProblem),
-      needValidation(fullProblem),
-      technicalFeasibility(fullProblem),
+      marketResearch(ideaContext),
+      competitionAnalysis(ideaContext),
+      needValidation(ideaContext),
+      technicalFeasibility(ideaContext),
     ])
 
     const marketData = marketResult.status === 'fulfilled' ? marketResult.value : null
@@ -345,7 +355,7 @@ Deno.serve(async (req: Request) => {
     // Phase 2 — business model depends on market + competition
     let businessData: BusinessModelAssessment | null = null
     try {
-      businessData = await businessModelAssessment(fullProblem, marketData, competitionData)
+      businessData = await businessModelAssessment(ideaContext, marketData, competitionData)
     } catch (err) {
       console.error('Business model assessment failed:', err)
     }
@@ -364,7 +374,7 @@ Deno.serve(async (req: Request) => {
     await updateProgress(supabase, jobId, 90)
 
     const synthesis = await synthesize(
-      fullProblem,
+      ideaContext,
       marketData,
       competitionData,
       needData,

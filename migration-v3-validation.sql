@@ -55,11 +55,11 @@ CREATE TABLE IF NOT EXISTS validation_reports (
   need_validation jsonb,
   business_model jsonb,
   technical_feasibility jsonb,
-  market_score smallint CHECK (market_score >= 1 AND market_score <= 10),
-  competition_score smallint CHECK (competition_score >= 1 AND competition_score <= 10),
-  need_score smallint CHECK (need_score >= 1 AND need_score <= 10),
-  business_score smallint CHECK (business_score >= 1 AND business_score <= 10),
-  technical_score smallint CHECK (technical_score >= 1 AND technical_score <= 10),
+  market_score smallint CHECK (market_score >= 1 AND market_score <= 5),
+  competition_score smallint CHECK (competition_score >= 1 AND competition_score <= 5),
+  need_score smallint CHECK (need_score >= 1 AND need_score <= 5),
+  business_score smallint CHECK (business_score >= 1 AND business_score <= 5),
+  technical_score smallint CHECK (technical_score >= 1 AND technical_score <= 5),
   overall_score smallint GENERATED ALWAYS AS (
     (market_score + competition_score + need_score + business_score + technical_score) / 5
   ) STORED,

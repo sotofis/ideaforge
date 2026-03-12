@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
   const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
   if (authErr || !user) return res.status(401).json({ error: 'Invalid token' });
 
-  const { ideaId } = req.body;
+  const { ideaId, problem, audience, advantage, clarifyAnswer } = req.body;
   if (!ideaId) return res.status(400).json({ error: 'ideaId required' });
 
   try {
@@ -82,7 +82,14 @@ module.exports = async (req, res) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
       },
-      body: JSON.stringify({ jobId: job.id, ideaId, problem: idea.problem })
+      body: JSON.stringify({
+        jobId: job.id,
+        ideaId,
+        problem: problem || idea.problem,
+        audience: audience || '',
+        advantage: advantage || '',
+        clarifyAnswer: clarifyAnswer || ''
+      })
     }).catch(() => {});
 
     res.status(200).json({ jobId: job.id, status: 'pending' });

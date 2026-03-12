@@ -204,6 +204,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .pricing-perks li::before{content:'✓';color:var(--pri);font-weight:700}
 .pricing-card .btn{margin-top:.5rem}
 
+/* ── Validation Intake Screen ── */
+#valIntakeScreen{padding:0;padding-bottom:calc(var(--safe-bottom)+24px)}
+.val-intake-body{flex:1;padding:1.25rem}
+.val-intake-body h3{font-size:1rem;font-weight:700;margin-bottom:.25rem}
+.val-intake-body .subtitle{font-size:.85rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.5}
+.val-q{margin-bottom:1.5rem}
+.val-q label{display:block;font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.4rem}
+.val-q label small{text-transform:none;font-weight:400;letter-spacing:0;display:block;margin-top:2px;font-size:.75rem;opacity:.7}
+.val-q textarea{width:100%;padding:.8rem 1rem;background:var(--surf);border:1.5px solid var(--dim);border-radius:14px;color:var(--text);font-size:.9rem;font-family:inherit;line-height:1.5;resize:none;min-height:72px;transition:border-color .25s}
+.val-q textarea:focus{outline:none;border-color:var(--pri)}
+.val-q textarea::placeholder{color:rgba(167,169,190,.4)}
+.val-clarify{background:var(--surf);border:1px solid rgba(108,99,255,.2);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem;display:none}
+.val-clarify.show{display:block}
+.val-clarify h4{font-size:.85rem;font-weight:700;color:var(--pri);margin-bottom:.5rem}
+.val-clarify p{font-size:.85rem;color:var(--muted);line-height:1.5;margin-bottom:.75rem}
+.val-clarify textarea{width:100%;padding:.7rem;background:var(--bg);border:1.5px solid var(--dim);border-radius:12px;color:var(--text);font-size:.85rem;font-family:inherit;line-height:1.4;resize:none;min-height:60px}
+.val-clarify textarea:focus{outline:none;border-color:var(--pri)}
+
 /* ── Validation Progress Screen ── */
 #validationScreen{padding:0}
 .validation-content{flex:1;padding:1.25rem;padding-bottom:calc(var(--safe-bottom)+24px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.5rem}
@@ -445,6 +463,39 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <span id="validateBtnText">Validate This Idea</span>
       </button>
       <div id="validateInfo" style="font-size:.75rem;color:var(--muted);text-align:center;margin-top:.5rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Validation Intake Screen -->
+<div class="screen slide-right" id="valIntakeScreen">
+  <div class="form-header">
+    <button class="back-btn" id="valIntakeBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h2>Validate Idea</h2>
+  </div>
+  <div class="val-intake-body">
+    <h3>Help our AI agents understand your idea</h3>
+    <p class="subtitle">The more specific you are, the better the research.</p>
+    <div class="val-q">
+      <label>What problem are you solving?<small>Describe the pain point, not the solution</small></label>
+      <textarea id="valProblem" placeholder="e.g. Small restaurant owners waste 20-30% of perishable ingredients because they can't predict daily demand accurately"></textarea>
+    </div>
+    <div class="val-q">
+      <label>Who are you creating value for?<small>Be specific about your target audience</small></label>
+      <textarea id="valAudience" placeholder="e.g. Independent restaurant owners with 1-3 locations, doing $500K-$2M annual revenue"></textarea>
+    </div>
+    <div class="val-q">
+      <label>What's your unfair advantage?<small>Why you/your team? Domain expertise, tech, network?</small></label>
+      <textarea id="valAdvantage" placeholder="e.g. 10 years in restaurant supply chain, existing relationships with 200+ restaurant owners"></textarea>
+    </div>
+    <div class="val-clarify" id="valClarify">
+      <h4>Before we start researching...</h4>
+      <p id="valClarifyText"></p>
+      <textarea id="valClarifyAnswer" placeholder="Your answer..."></textarea>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;flex-direction:column;gap:.75rem">
+      <button class="btn btn-pri" id="valStartBtn" disabled>Start AI Validation</button>
+      <div style="font-size:.75rem;color:var(--muted);text-align:center" id="valCreditsInfo"></div>
     </div>
   </div>
 </div>
@@ -733,7 +784,7 @@ function renderIdeas(){
     var groupBadge=idea.group_id&&groupMap[idea.group_id]?'<span class="card-group-badge">'+esc(groupMap[idea.group_id])+'</span>':'';
     var noteIcon=idea.notes?'<span class="card-note-icon" title="Has notes">📝</span>':'';
     var valBadge='';
-    if(idea.validation_status==='complete')valBadge='<span class="val-badge val-badge-complete">AI: '+( idea.ai_overall_score||'?')+'/10</span>';
+    if(idea.validation_status==='complete')valBadge='<span class="val-badge val-badge-complete">AI: '+(idea.ai_overall_score||'?')+'/5</span>';
     else if(idea.validation_status==='pending')valBadge='<span class="val-badge val-badge-pending">Validating...</span>';
     return'<div class="idea-card" data-id="'+idea.id+'" style="animation-delay:'+(i*50)+'ms"><div class="card-score" style="background:'+scoreColor(idea.total_score)+'">'+idea.total_score+'<small>/12</small></div><div class="card-body"><div class="card-problem">'+esc(idea.problem)+valBadge+'</div><div class="card-meta"><div class="mini-scores"><div class="mini-pill" style="background:'+pillColor(idea.impact)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.size)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.motivation)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.feasibility)+'"></div></div>'+noteIcon+groupBadge+'<span class="card-date">'+timeAgo(idea.created_at)+'</span></div></div></div>'
   }).join('');
@@ -853,7 +904,7 @@ function joinGroupByCode(code){
 }
 
 // ── Validation ──
-var currentValJobId=null,valChannel=null;
+var currentValJobId=null,valChannel=null,valIdeaId=null,valClarified=false;
 
 $('#validateBtn').onclick=function(){
   if(!state.editingId){toast('Save the idea first','error');return}
@@ -861,30 +912,93 @@ $('#validateBtn').onclick=function(){
   if(!idea)return;
   if(idea.validation_status==='complete'){viewReport(idea.id);return}
   if(idea.validation_status==='pending'){toast('Validation already in progress','info');return}
-  triggerValidation(idea.id);
+  openValIntake(idea);
 };
 
+$('#valIntakeBack').onclick=function(){showScreen('formScreen')};
 $('#valBack').onclick=function(){showScreen('formScreen')};
 $('#reportBack').onclick=function(){showScreen('formScreen')};
 
-function triggerValidation(ideaId){
+function openValIntake(idea){
+  valIdeaId=idea.id;valClarified=false;
+  $('#valProblem').value=idea.problem||'';
+  $('#valAudience').value='';$('#valAdvantage').value='';
+  $('#valClarify').classList.remove('show');$('#valClarifyAnswer').value='';
+  var credits=state.profile?state.profile.validation_credits:0;
+  $('#valCreditsInfo').textContent=credits+' validation'+(credits!==1?'s':'')+' remaining';
+  $('#valStartBtn').disabled=true;$('#valStartBtn').textContent='Start AI Validation';
+  validateIntakeForm();
+  showScreen('valIntakeScreen');
+}
+function validateIntakeForm(){
+  var ok=$('#valProblem').value.trim().length>10&&$('#valAudience').value.trim().length>5;
+  $('#valStartBtn').disabled=!ok;
+}
+$('#valProblem').oninput=validateIntakeForm;
+$('#valAudience').oninput=validateIntakeForm;
+$('#valAdvantage').oninput=validateIntakeForm;
+
+$('#valStartBtn').onclick=function(){
+  if(!valIdeaId)return;
+  var problem=$('#valProblem').value.trim();
+  var audience=$('#valAudience').value.trim();
+  var advantage=$('#valAdvantage').value.trim();
+  var clarifyAnswer=$('#valClarifyAnswer').value.trim();
+  // If not yet clarified, do a pre-check first
+  if(!valClarified){
+    preCheckIdea(problem,audience,advantage);
+    return;
+  }
+  // All good — start validation
+  triggerValidation(valIdeaId,problem,audience,advantage,clarifyAnswer);
+};
+
+function preCheckIdea(problem,audience,advantage){
+  var btn=$('#valStartBtn');btn.disabled=true;btn.textContent='Checking clarity...';
   loading(true);
+  sb.auth.getSession().then(function(r){
+    var token=r.data.session.access_token;
+    fetch('/api/validate-precheck',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({problem:problem,audience:audience,advantage:advantage})
+    }).then(function(r){return r.json()}).then(function(data){
+      loading(false);
+      if(data.clear){
+        // Idea is clear enough — proceed directly
+        valClarified=true;
+        triggerValidation(valIdeaId,problem,audience,advantage,'');
+      }else if(data.questions){
+        // AI wants clarification
+        $('#valClarifyText').textContent=data.questions;
+        $('#valClarify').classList.add('show');
+        valClarified=true;// next click will proceed
+        btn.textContent='Continue with Validation';btn.disabled=false;
+      }else{
+        toast(data.error||'Pre-check failed','error');
+        btn.textContent='Start AI Validation';btn.disabled=false;
+      }
+    }).catch(function(e){loading(false);toast('Error: '+e.message,'error');btn.textContent='Start AI Validation';btn.disabled=false});
+  });
+}
+
+function triggerValidation(ideaId,problem,audience,advantage,clarifyAnswer){
+  loading(true);$('#valStartBtn').disabled=true;$('#valStartBtn').textContent='Starting...';
   sb.auth.getSession().then(function(r){
     var token=r.data.session.access_token;
     fetch('/api/validate-idea',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({ideaId:ideaId})
+      body:JSON.stringify({ideaId:ideaId,problem:problem,audience:audience,advantage:advantage,clarifyAnswer:clarifyAnswer})
     }).then(function(r){return r.json()}).then(function(data){
       loading(false);
-      if(data.error){toast(data.error,'error');return}
+      if(data.error){toast(data.error,'error');$('#valStartBtn').disabled=false;$('#valStartBtn').textContent='Start AI Validation';return}
       currentValJobId=data.jobId;
-      // Update local state
       var idea=state.ideas.find(function(x){return x.id===ideaId});
       if(idea)idea.validation_status='pending';
       renderIdeas();
       showValidationProgress(data.jobId,ideaId);
-    }).catch(function(e){loading(false);toast('Validation failed: '+e.message,'error')});
+    }).catch(function(e){loading(false);toast('Validation failed: '+e.message,'error');$('#valStartBtn').disabled=false;$('#valStartBtn').textContent='Start AI Validation'});
   });
 }
 
@@ -969,7 +1083,7 @@ function viewReport(ideaId){
 
 function renderReport(r){
   var recLabel={strong_yes:'Strong Yes',yes:'Yes — Go For It',maybe:'Maybe — Needs Work',no:'Probably Not',strong_no:'Hard No'};
-  function scoreColor10(v){if(v<=3)return'var(--red)';if(v<=5)return'var(--orange)';if(v<=7)return'var(--yellow)';return'var(--emerald)'}
+  function scoreColor10(v){if(v<=1)return'var(--red)';if(v<=2)return'var(--orange)';if(v<=3)return'var(--yellow)';if(v<=4)return'var(--green)';return'var(--emerald)'}
   function renderList(arr){if(!arr||!arr.length)return'<p>No data available.</p>';return'<ul>'+arr.map(function(x){return'<li>'+esc(x)+'</li>'}).join('')+'</ul>'}
   function renderJSON(obj,fields){if(!obj)return'<p>No data available.</p>';var html='';fields.forEach(function(f){if(obj[f.key]){if(Array.isArray(obj[f.key]))html+='<p><strong>'+f.label+':</strong></p>'+renderList(obj[f.key]);else html+='<p><strong>'+f.label+':</strong> '+esc(String(obj[f.key]))+'</p>'}});return html}
 
@@ -984,7 +1098,7 @@ function renderReport(r){
     html+='<div class="report-score-card"><div class="report-score-val" style="color:'+scoreColor10(v)+'">'+v+'</div><div class="report-score-label">'+s.l+'</div></div>';
   });
   var ov=r.overall_score||0;
-  html+='<div class="report-score-card full-width"><div class="report-score-val" style="color:'+scoreColor10(ov)+';font-size:2.5rem">'+ov+'/10</div><div class="report-score-label">Overall Score</div></div>';
+  html+='<div class="report-score-card full-width"><div class="report-score-val" style="color:'+scoreColor10(ov)+';font-size:2.5rem">'+ov+'/5</div><div class="report-score-label">Overall Score</div></div>';
   html+='</div>';
 
   // Executive Summary

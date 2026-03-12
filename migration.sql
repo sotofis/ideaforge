@@ -1,67 +1,25 @@
 -- IdeaForge v2: Safe migration for SHARED Supabase project
--- Uses IF NOT EXISTS / ADD COLUMN IF NOT EXISTS to avoid conflicts
--- Run in Supabase SQL Editor
+-- Run in Supabase SQL Editor (safe to re-run)
 
 -- ============================================================
 -- 1. PROFILES: Add IdeaForge columns to existing profiles table
 -- ============================================================
 
--- Add columns only if they don't already exist
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS user_id uuid references auth.users(id) on delete cascade;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS display_name text;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_customer_id text;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan text default 'free';
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS subscription_status text default 'none';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan text DEFAULT 'free';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS subscription_status text DEFAULT 'none';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS trial_ends_at timestamptz;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS current_period_end timestamptz;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ad_credits int default 0;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS created_at timestamptz default now();
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS updated_at timestamptz default now();
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ad_credits int DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
 
--- Ensure RLS is on (idempotent)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
--- Add IdeaForge RLS policies (drop first to be idempotent)
-DROP POLICY IF EXISTS "ideaforge_profiles_select" ON profiles;
-CREATE POLICY "ideaforge_profiles_select" ON profiles FOR SELECT USING (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "ideaforge_profiles_update" ON profiles;
-CREATE POLICY "ideaforge_profiles_update" ON profiles FOR UPDATE USING (auth.uid() = user_id);
-
--- Auto-create profile on signup (replace safely — other app may have its own version)
--- We use CREATE OR REPLACE so it overwrites any existing version
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger AS $$
-BEGIN
-  INSERT INTO public.profiles (user_id, display_name)
-  VALUES (new.id, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)))
-  ON CONFLICT (user_id) DO NOTHING;
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create trigger only if it doesn't exist
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
--- Updated_at trigger helper (create if not exists)
-CREATE OR REPLACE FUNCTION public.update_updated_at()
-RETURNS trigger AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS profiles_updated_at ON profiles;
-CREATE TRIGGER profiles_updated_at
-  BEFORE UPDATE ON profiles
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
 -- ============================================================
--- 2. GROUPS
+-- 2. CREATE ALL TABLES FIRST (before any cross-references)
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS groups (
@@ -74,6 +32,31 @@ CREATE TABLE IF NOT EXISTS groups (
 
 ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
 
+CREATE TABLE IF NOT EXISTS group_members (
+  group_id uuid NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role text NOT NULL DEFAULT 'member' CHECK (role IN ('owner', 'member')),
+  joined_at timestamptz DEFAULT now(),
+  PRIMARY KEY (group_id, user_id)
+);
+
+ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE ideas ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES groups(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS ideas_group_idx ON ideas (group_id) WHERE group_id IS NOT NULL;
+
+-- ============================================================
+-- 3. ALL POLICIES (now that all tables exist)
+-- ============================================================
+
+-- Profiles policies
+DROP POLICY IF EXISTS "ideaforge_profiles_select" ON profiles;
+CREATE POLICY "ideaforge_profiles_select" ON profiles FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "ideaforge_profiles_update" ON profiles;
+CREATE POLICY "ideaforge_profiles_update" ON profiles FOR UPDATE USING (auth.uid() = user_id);
+
+-- Groups policies
 DROP POLICY IF EXISTS "Members can view groups" ON groups;
 CREATE POLICY "Members can view groups" ON groups
   FOR SELECT USING (
@@ -96,20 +79,7 @@ DROP POLICY IF EXISTS "Anyone can lookup by invite code" ON groups;
 CREATE POLICY "Anyone can lookup by invite code" ON groups
   FOR SELECT USING (true);
 
--- ============================================================
--- 3. GROUP MEMBERS
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS group_members (
-  group_id uuid NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role text NOT NULL DEFAULT 'member' CHECK (role IN ('owner', 'member')),
-  joined_at timestamptz DEFAULT now(),
-  PRIMARY KEY (group_id, user_id)
-);
-
-ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
-
+-- Group members policies
 DROP POLICY IF EXISTS "Members can view memberships" ON group_members;
 CREATE POLICY "Members can view memberships" ON group_members
   FOR SELECT USING (
@@ -130,13 +100,7 @@ DROP POLICY IF EXISTS "Users can leave" ON group_members;
 CREATE POLICY "Users can leave" ON group_members
   FOR DELETE USING (auth.uid() = user_id);
 
--- ============================================================
--- 4. ADD group_id TO IDEAS
--- ============================================================
-
-ALTER TABLE ideas ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES groups(id) ON DELETE SET NULL;
-
--- Update RLS for group ideas
+-- Ideas: update RLS for group access
 DROP POLICY IF EXISTS "Users can view own ideas" ON ideas;
 DROP POLICY IF EXISTS "Users can view own and group ideas" ON ideas;
 CREATE POLICY "Users can view own and group ideas" ON ideas
@@ -145,12 +109,39 @@ CREATE POLICY "Users can view own and group ideas" ON ideas
     OR group_id IN (SELECT group_id FROM group_members WHERE user_id = auth.uid())
   );
 
-CREATE INDEX IF NOT EXISTS ideas_group_idx ON ideas (group_id) WHERE group_id IS NOT NULL;
-
 -- ============================================================
--- 5. JOIN GROUP FUNCTION
+-- 4. FUNCTIONS AND TRIGGERS
 -- ============================================================
 
+CREATE OR REPLACE FUNCTION public.update_updated_at()
+RETURNS trigger AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS profiles_updated_at ON profiles;
+CREATE TRIGGER profiles_updated_at
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (user_id, display_name)
+  VALUES (new.id, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)))
+  ON CONFLICT (user_id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Join group function
 CREATE OR REPLACE FUNCTION public.join_group_by_code(code text)
 RETURNS json AS $$
 DECLARE
@@ -173,7 +164,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================================
--- 6. BACKFILL: Ensure existing users have a profile row
+-- 5. BACKFILL: Ensure existing users have a profile row
 -- ============================================================
 
 INSERT INTO profiles (user_id, display_name)

@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS group_members (
 
 ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE ideas ADD COLUMN IF NOT EXISTS notes text;
 ALTER TABLE ideas ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES groups(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS ideas_group_idx ON ideas (group_id) WHERE group_id IS NOT NULL;
 

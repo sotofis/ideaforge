@@ -107,6 +107,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .mini-scores{display:flex;gap:4px}
 .mini-pill{width:8px;height:8px;border-radius:3px}
 .card-date{font-size:.72rem;color:var(--muted)}
+.card-note-icon{font-size:.7rem;opacity:.6}
 .card-group-badge{font-size:.65rem;padding:2px 6px;border-radius:6px;background:rgba(108,99,255,.15);color:var(--pri);font-weight:600}
 .empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem;gap:1rem;color:var(--muted)}
 .empty-icon{font-size:4rem;opacity:.5}
@@ -128,6 +129,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .hmw-input{width:100%;padding:1rem;background:var(--surf);border:1.5px solid var(--dim);border-radius:14px;color:var(--text);font-size:1.05rem;font-family:inherit;line-height:1.5;resize:none;min-height:80px;transition:border-color .25s}
 .hmw-input:focus{outline:none;border-color:var(--pri)}
 .hmw-input::placeholder{color:rgba(167,169,190,.5)}
+.notes-section{margin-top:1.25rem}
+.notes-section label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em}
+.notes-input{width:100%;padding:.8rem 1rem;background:var(--surf);border:1.5px solid var(--dim);border-radius:14px;color:var(--text);font-size:.9rem;font-family:inherit;line-height:1.5;resize:none;min-height:100px;transition:border-color .25s}
+.notes-input:focus{outline:none;border-color:var(--pri)}
+.notes-input::placeholder{color:rgba(167,169,190,.4)}
+.notes-count{font-size:.7rem;color:var(--muted);text-align:right;margin-top:4px}
 .group-picker{margin-top:1rem}
 .group-picker select{width:100%;padding:.7rem 1rem;border-radius:12px;background:var(--surf);border:1.5px solid var(--dim);color:var(--text);font-size:.9rem;font-family:inherit}
 
@@ -329,7 +336,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <h3>Free</h3>
         <div class="pricing-price">$0</div>
         <ul class="pricing-perks">
-          <li>Unlimited ideas (with ads)</li>
+          <li>Up to 10 ideas (with ads)</li>
           <li>Join groups</li>
           <li>Basic scoring</li>
         </ul>
@@ -370,6 +377,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="form-body">
     <div class="hmw-prefix">HOW MIGHT WE...</div>
     <textarea class="hmw-input" id="hmwInput" placeholder="...reduce food waste in restaurants?"></textarea>
+    <div class="notes-section">
+      <label>Notes</label>
+      <textarea class="notes-input" id="notesInput" placeholder="Research, links, thoughts, next steps..."></textarea>
+      <div class="notes-count"><span id="notesCount">0</span>/2000</div>
+    </div>
     <div class="group-picker" id="groupPicker">
       <div class="field"><label>Add to group (optional)</label><select id="groupSelect"><option value="">Personal (no group)</option></select></div>
     </div>
@@ -600,7 +612,8 @@ function saveIdea(){
   if(!problem||!s.impact||!s.size||!s.motivation||!s.feasibility)return;
   var btn=$('#saveBtn');btn.disabled=true;loading(true);
   var groupId=$('#groupSelect').value||null;
-  var payload={problem:problem,impact:s.impact,size:s.size,motivation:s.motivation,feasibility:s.feasibility,group_id:groupId};
+  var notes=$('#notesInput').value.trim().slice(0,2000)||null;
+  var payload={problem:problem,notes:notes,impact:s.impact,size:s.size,motivation:s.motivation,feasibility:s.feasibility,group_id:groupId};
   var promise;
   if(state.editingId)promise=sb.from('ideas').update(payload).eq('id',state.editingId).select().single();
   else{payload.user_id=state.user.id;promise=sb.from('ideas').insert([payload]).select().single()}
@@ -634,13 +647,14 @@ function renderIdeas(){
   var groupMap={};state.groups.forEach(function(g){groupMap[g.id]=g.name});
   list.innerHTML=ideas.map(function(idea,i){
     var groupBadge=idea.group_id&&groupMap[idea.group_id]?'<span class="card-group-badge">'+esc(groupMap[idea.group_id])+'</span>':'';
-    return'<div class="idea-card" data-id="'+idea.id+'" style="animation-delay:'+(i*50)+'ms"><div class="card-score" style="background:'+scoreColor(idea.total_score)+'">'+idea.total_score+'<small>/12</small></div><div class="card-body"><div class="card-problem">'+esc(idea.problem)+'</div><div class="card-meta"><div class="mini-scores"><div class="mini-pill" style="background:'+pillColor(idea.impact)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.size)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.motivation)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.feasibility)+'"></div></div>'+groupBadge+'<span class="card-date">'+timeAgo(idea.created_at)+'</span></div></div></div>'
+    var noteIcon=idea.notes?'<span class="card-note-icon" title="Has notes">📝</span>':'';
+    return'<div class="idea-card" data-id="'+idea.id+'" style="animation-delay:'+(i*50)+'ms"><div class="card-score" style="background:'+scoreColor(idea.total_score)+'">'+idea.total_score+'<small>/12</small></div><div class="card-body"><div class="card-problem">'+esc(idea.problem)+'</div><div class="card-meta"><div class="mini-scores"><div class="mini-pill" style="background:'+pillColor(idea.impact)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.size)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.motivation)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.feasibility)+'"></div></div>'+noteIcon+groupBadge+'<span class="card-date">'+timeAgo(idea.created_at)+'</span></div></div></div>'
   }).join('');
   list.querySelectorAll('.idea-card').forEach(function(c){c.onclick=function(){openEdit(c.dataset.id)}});
 }
 
 // ── Form ──
-function resetForm(){state.editingId=null;state.scores={impact:0,size:0,motivation:0,feasibility:0};$('#hmwInput').value='';$$('.score-btn').forEach(function(b){b.classList.remove('sel-1','sel-2','sel-3')});updateTotalDisplay();$('#formTitle').textContent='New Idea';$('#deleteZone').style.display='none';$('#saveBtn').disabled=true;$('#groupSelect').value='';populateGroupSelect()}
+function resetForm(){state.editingId=null;state.scores={impact:0,size:0,motivation:0,feasibility:0};$('#hmwInput').value='';$('#notesInput').value='';$('#notesCount').textContent='0';$$('.score-btn').forEach(function(b){b.classList.remove('sel-1','sel-2','sel-3')});updateTotalDisplay();$('#formTitle').textContent='New Idea';$('#deleteZone').style.display='none';$('#saveBtn').disabled=true;$('#groupSelect').value='';populateGroupSelect()}
 function populateGroupSelect(){var sel=$('#groupSelect');sel.innerHTML='<option value="">Personal</option>';state.groups.forEach(function(g){sel.innerHTML+='<option value="'+g.id+'">'+esc(g.name)+'</option>'})}
 
 var FREE_IDEA_LIMIT=10;
@@ -653,7 +667,7 @@ function openEdit(id){
   var idea=state.ideas.find(function(x){return x.id===id});if(!idea)return;
   resetForm();state.editingId=id;
   state.scores={impact:idea.impact,size:idea.size,motivation:idea.motivation,feasibility:idea.feasibility};
-  $('#hmwInput').value=idea.problem;$('#formTitle').textContent='Edit Idea';$('#deleteZone').style.display='block';
+  $('#hmwInput').value=idea.problem;$('#notesInput').value=idea.notes||'';$('#notesCount').textContent=(idea.notes||'').length;$('#formTitle').textContent='Edit Idea';$('#deleteZone').style.display='block';
   if(idea.group_id)$('#groupSelect').value=idea.group_id;
   ['impact','size','motivation','feasibility'].forEach(function(f){var v=state.scores[f];var c=document.querySelector('.score-options[data-field="'+f+'"]');c.querySelectorAll('.score-btn').forEach(function(b){b.classList.remove('sel-1','sel-2','sel-3');if(parseInt(b.dataset.value)===v)b.classList.add('sel-'+v)})});
   updateTotalDisplay();showScreen('formScreen');
@@ -662,6 +676,7 @@ $$('.score-options').forEach(function(g){g.querySelectorAll('.score-btn').forEac
 function updateTotalDisplay(){var s=state.scores,ok=s.impact&&s.size&&s.motivation&&s.feasibility,t=s.impact+s.size+s.motivation+s.feasibility,n=$('#totalNum'),r=$('#ringFg'),v=$('#verdict');if(!ok){n.textContent='–';n.style.color='var(--muted)';r.style.strokeDashoffset='264';r.style.stroke='var(--dim)';v.textContent='';v.style.background='none';return}n.textContent=t;var c=scoreColor(t);n.style.color=c;r.style.stroke=c;r.style.strokeDashoffset=264-(264*((t-4)/8));var labels={4:'Needs work',5:'Needs work',6:'Has potential',7:'Has potential',8:'Looking good',9:'Looking good',10:'Strong idea',11:'Strong idea',12:'Go for it!'};v.textContent=labels[t]||'';v.style.color=c;v.style.background='var(--surf)'}
 function validateForm(){var p=$('#hmwInput').value.trim(),s=state.scores;$('#saveBtn').disabled=!(p.length>0&&s.impact&&s.size&&s.motivation&&s.feasibility)}
 $('#hmwInput').oninput=validateForm;
+$('#notesInput').oninput=function(){var l=this.value.length;$('#notesCount').textContent=l;if(l>2000)this.value=this.value.slice(0,2000)};
 $('#saveBtn').onclick=saveIdea;
 $('#formBack').onclick=function(){showScreen('dashScreen')};
 $('#fabBtn').onclick=openNew;

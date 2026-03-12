@@ -14,7 +14,7 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
   --pri:#6C63FF;--pri-dark:#5A52D5;--acc:#FF6584;
-  --bg:#0F0E17;--surf:#1A1929;--surf2:#232237;
+  --bg:#0F0E17;--surf:#1A1929;--surf2:#232237;--surf3:#2d2c44;
   --text:#FFFFFE;--muted:#A7A9BE;--dim:rgba(255,255,255,.06);
   --radius:16px;
   --score1:#64748B;--score2:#F59E0B;--score3:#10B981;
@@ -23,59 +23,31 @@
   --safe-bottom:env(safe-area-inset-bottom,0px);
 }
 html{height:100%;-webkit-text-size-adjust:100%}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  background:var(--bg);color:var(--text);
-  height:100%;overflow:hidden;
-  -webkit-tap-highlight-color:transparent;
-}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden;-webkit-tap-highlight-color:transparent}
 
-/* ── Screens: hidden by default, .active makes visible ── */
-.screen{
-  position:fixed;inset:0;
-  padding-top:calc(var(--safe-top) + 16px);
-  padding-bottom:calc(var(--safe-bottom) + 16px);
-  overflow-y:auto;-webkit-overflow-scrolling:touch;
-  opacity:0;pointer-events:none;
-  transition:opacity .3s ease,transform .3s ease;
-  transform:translateY(20px);
-  display:flex;flex-direction:column;
-  z-index:1;
-}
+/* ── Screens ── */
+.screen{position:fixed;inset:0;padding-top:calc(var(--safe-top)+16px);padding-bottom:calc(var(--safe-bottom)+16px);overflow-y:auto;-webkit-overflow-scrolling:touch;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;transform:translateY(20px);display:flex;flex-direction:column;z-index:1}
 .screen.active{opacity:1;pointer-events:auto;transform:translateY(0);z-index:2}
 .screen.slide-right{transform:translateX(40px)}
 .screen.slide-right.active{transform:translateX(0)}
-
-/* ── Splash: shown via .active, same as other screens ── */
 #splash.active{z-index:100;background:var(--bg);align-items:center;justify-content:center;gap:1.5rem}
 #splash .logo-big{font-size:2.5rem;font-weight:900;color:var(--pri)}
 .spinner{width:32px;height:32px;border:3px solid var(--dim);border-top-color:var(--pri);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── Inputs ── */
+/* ── Common ── */
 .field{margin-bottom:1.25rem}
 .field label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em}
-.field input,.field textarea{
-  width:100%;padding:.8rem 1rem;border:1.5px solid var(--dim);border-radius:12px;
-  background:var(--bg);color:var(--text);font-size:1rem;font-family:inherit;transition:border-color .25s;
-}
+.field input,.field textarea{width:100%;padding:.8rem 1rem;border:1.5px solid var(--dim);border-radius:12px;background:var(--bg);color:var(--text);font-size:1rem;font-family:inherit;transition:border-color .25s}
 .field input:focus,.field textarea:focus{outline:none;border-color:var(--pri)}
-.field textarea{resize:vertical;min-height:100px;line-height:1.5}
-
-/* ── Buttons ── */
-.btn{
-  display:flex;align-items:center;justify-content:center;gap:.5rem;
-  width:100%;padding:.9rem;border-radius:14px;
-  font-size:1rem;font-weight:700;font-family:inherit;
-  cursor:pointer;border:none;transition:transform .15s,box-shadow .25s,opacity .25s;
-}
-.btn:active{transform:scale(.97)}
-.btn:disabled{opacity:.4;pointer-events:none}
+.btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.9rem;border-radius:14px;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;border:none;transition:transform .15s,box-shadow .25s,opacity .25s}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.4;pointer-events:none}
 .btn-pri{background:var(--pri);color:#fff;box-shadow:0 4px 20px rgba(108,99,255,.35)}
 .btn-pri:hover{box-shadow:0 6px 28px rgba(108,99,255,.5)}
 .btn-ghost{background:transparent;color:var(--muted);font-weight:500;font-size:.9rem}
 .btn-danger{background:rgba(239,68,68,.12);color:var(--red);font-weight:600}
-.btn-danger:hover{background:rgba(239,68,68,.2)}
+.btn-outline{background:transparent;border:1.5px solid var(--pri);color:var(--pri)}
+.btn-sm{padding:.6rem .8rem;font-size:.85rem;width:auto;border-radius:10px}
 
 /* ── Auth ── */
 #authScreen{padding:2rem;align-items:center;justify-content:center}
@@ -83,51 +55,51 @@ body{
 .auth-box .logo-big{text-align:center;font-size:2rem;font-weight:900;color:var(--pri);margin-bottom:.25rem}
 .auth-box .tagline{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:2.5rem}
 .auth-tabs{display:flex;background:var(--surf);border-radius:12px;padding:4px;margin-bottom:2rem}
-.auth-tab{
-  flex:1;padding:.6rem;text-align:center;border-radius:10px;font-weight:600;font-size:.9rem;
-  background:none;border:none;color:var(--muted);cursor:pointer;transition:.25s;font-family:inherit;
-}
+.auth-tab{flex:1;padding:.6rem;text-align:center;border-radius:10px;font-weight:600;font-size:.9rem;background:none;border:none;color:var(--muted);cursor:pointer;transition:.25s;font-family:inherit}
 .auth-tab.active{background:var(--pri);color:#fff}
 .auth-error{background:rgba(239,68,68,.1);color:var(--red);padding:.75rem 1rem;border-radius:10px;font-size:.85rem;margin-bottom:1rem;display:none}
 .auth-error.show{display:block}
 
-/* ── Dashboard ── */
-#dashScreen{padding:0}
-.dash-header{
-  padding:1rem 1.25rem;padding-top:calc(var(--safe-top) + 1rem);
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:10;
-  background:rgba(15,14,23,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--dim);
-}
-.dash-header h1{font-size:1.35rem;font-weight:800}
-.dash-header h1 span{color:var(--pri)}
+/* ── Top Header (shared) ── */
+.top-header{padding:1rem 1.25rem;padding-top:calc(var(--safe-top)+1rem);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;background:rgba(15,14,23,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--dim)}
+.top-header h1{font-size:1.35rem;font-weight:800}
+.top-header h1 span{color:var(--pri)}
 .header-actions{display:flex;gap:.5rem;align-items:center}
-.icon-btn{
-  width:40px;height:40px;border-radius:12px;background:var(--surf);border:1px solid var(--dim);
-  color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:.2s;
-}
+.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--surf);border:1px solid var(--dim);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:.2s}
 .icon-btn:hover{background:var(--surf2);color:var(--text)}
-.sort-bar{display:flex;gap:.5rem;padding:.75rem 1.25rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.sort-pill{
-  padding:.4rem .9rem;border-radius:20px;font-size:.8rem;font-weight:600;white-space:nowrap;
-  background:var(--surf);border:1px solid var(--dim);color:var(--muted);cursor:pointer;transition:.2s;font-family:inherit;
-}
+
+/* ── Bottom Nav ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--surf);border-top:1px solid var(--dim);padding-bottom:var(--safe-bottom);z-index:50}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:.6rem 0;background:none;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.65rem;font-weight:600;transition:.2s}
+.nav-item svg{width:22px;height:22px}
+.nav-item.active{color:var(--pri)}
+.nav-item.active svg{stroke:var(--pri)}
+
+/* ── Dashboard ── */
+#dashScreen{padding:0;padding-bottom:calc(var(--safe-bottom)+70px)}
+.sort-bar{display:flex;gap:.5rem;padding:.75rem 1.25rem;overflow-x:auto}
+.sort-pill{padding:.4rem .9rem;border-radius:20px;font-size:.8rem;font-weight:600;white-space:nowrap;background:var(--surf);border:1px solid var(--dim);color:var(--muted);cursor:pointer;transition:.2s;font-family:inherit}
 .sort-pill.active{background:var(--pri);color:#fff;border-color:var(--pri)}
-.ideas-list{flex:1;padding:1rem 1.25rem;padding-bottom:calc(var(--safe-bottom) + 100px);display:flex;flex-direction:column;gap:.75rem}
+.ideas-list{flex:1;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+
+/* ── Ad Banner (free users) ── */
+.ad-banner{margin:0 1.25rem .75rem;padding:.8rem 1rem;background:var(--surf);border:1px dashed var(--dim);border-radius:12px;text-align:center;font-size:.75rem;color:var(--muted)}
+.ad-banner a{color:var(--pri);text-decoration:none;font-weight:600}
+
+/* ── Upgrade Banner ── */
+.upgrade-banner{margin:0 1.25rem .75rem;padding:.8rem 1rem;background:linear-gradient(135deg,rgba(108,99,255,.12),rgba(255,101,132,.08));border:1px solid rgba(108,99,255,.2);border-radius:12px;display:flex;align-items:center;gap:.75rem;cursor:pointer;transition:.2s}
+.upgrade-banner:hover{border-color:rgba(108,99,255,.4)}
+.upgrade-banner .text{flex:1}
+.upgrade-banner .title{font-size:.85rem;font-weight:700}
+.upgrade-banner .sub{font-size:.72rem;color:var(--muted)}
+.upgrade-banner .arrow{color:var(--pri);font-size:1.2rem}
 
 /* ── Idea Card ── */
-.idea-card{
-  background:var(--surf);border:1px solid var(--dim);border-radius:var(--radius);padding:1.1rem;
-  display:flex;gap:1rem;align-items:flex-start;cursor:pointer;
-  transition:transform .2s,box-shadow .2s,border-color .2s;animation:cardIn .4s ease backwards;
-}
+.idea-card{background:var(--surf);border:1px solid var(--dim);border-radius:var(--radius);padding:1.1rem;display:flex;gap:1rem;align-items:flex-start;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;animation:cardIn .4s ease backwards}
 .idea-card:active{transform:scale(.98)}
 .idea-card:hover{border-color:rgba(108,99,255,.2);box-shadow:0 4px 20px rgba(0,0,0,.2)}
 @keyframes cardIn{from{opacity:0;transform:translateY(16px)}}
-.card-score{
-  flex-shrink:0;width:52px;height:52px;border-radius:14px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;font-weight:900;font-size:1.3rem;line-height:1;color:#fff;
-}
+.card-score{flex-shrink:0;width:52px;height:52px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:1.3rem;line-height:1;color:#fff}
 .card-score small{font-size:.6rem;font-weight:500;opacity:.7;margin-top:2px}
 .card-body{flex:1;min-width:0}
 .card-problem{font-size:.92rem;font-weight:500;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:.6rem}
@@ -135,43 +107,29 @@ body{
 .mini-scores{display:flex;gap:4px}
 .mini-pill{width:8px;height:8px;border-radius:3px}
 .card-date{font-size:.72rem;color:var(--muted)}
-
-/* ── Empty State ── */
+.card-group-badge{font-size:.65rem;padding:2px 6px;border-radius:6px;background:rgba(108,99,255,.15);color:var(--pri);font-weight:600}
 .empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem;gap:1rem;color:var(--muted)}
 .empty-icon{font-size:4rem;opacity:.5}
 .empty-state h3{font-size:1.1rem;color:var(--text)}
 .empty-state p{font-size:.9rem;max-width:260px;line-height:1.5}
 
 /* ── FAB ── */
-.fab{
-  position:fixed;bottom:calc(var(--safe-bottom) + 24px);right:20px;width:60px;height:60px;border-radius:18px;
-  background:var(--pri);color:#fff;border:none;font-size:2rem;font-weight:300;cursor:pointer;z-index:20;
-  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 28px rgba(108,99,255,.5);transition:transform .2s,box-shadow .2s;
-}
-.fab:hover{transform:scale(1.08);box-shadow:0 8px 36px rgba(108,99,255,.6)}
-.fab:active{transform:scale(.95)}
+.fab{position:fixed;bottom:calc(var(--safe-bottom)+80px);right:20px;width:60px;height:60px;border-radius:18px;background:var(--pri);color:#fff;border:none;font-size:2rem;font-weight:300;cursor:pointer;z-index:40;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 28px rgba(108,99,255,.5);transition:transform .2s,box-shadow .2s}
+.fab:hover{transform:scale(1.08)}.fab:active{transform:scale(.95)}
 .fab.hidden{transform:scale(0);pointer-events:none}
 
 /* ── Form ── */
 #formScreen{padding:0}
-.form-header{
-  padding:1rem 1.25rem;padding-top:calc(var(--safe-top) + 1rem);display:flex;align-items:center;gap:1rem;
-  position:sticky;top:0;z-index:10;background:rgba(15,14,23,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--dim);
-}
+.form-header{padding:1rem 1.25rem;padding-top:calc(var(--safe-top)+1rem);display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10;background:rgba(15,14,23,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--dim)}
 .form-header h2{font-size:1.1rem;font-weight:700;flex:1}
-.back-btn{
-  width:40px;height:40px;border-radius:12px;background:var(--surf);border:1px solid var(--dim);
-  color:var(--text);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;
-}
-.back-btn:hover{background:var(--surf2)}
-.form-body{flex:1;padding:1.25rem;padding-bottom:calc(var(--safe-bottom) + 24px)}
+.back-btn{width:40px;height:40px;border-radius:12px;background:var(--surf);border:1px solid var(--dim);color:var(--text);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.form-body{flex:1;padding:1.25rem;padding-bottom:calc(var(--safe-bottom)+24px)}
 .hmw-prefix{font-size:.85rem;font-weight:700;color:var(--pri);margin-bottom:.5rem;letter-spacing:.03em}
-.hmw-input{
-  width:100%;padding:1rem;background:var(--surf);border:1.5px solid var(--dim);border-radius:14px;
-  color:var(--text);font-size:1.05rem;font-family:inherit;line-height:1.5;resize:none;min-height:80px;transition:border-color .25s;
-}
+.hmw-input{width:100%;padding:1rem;background:var(--surf);border:1.5px solid var(--dim);border-radius:14px;color:var(--text);font-size:1.05rem;font-family:inherit;line-height:1.5;resize:none;min-height:80px;transition:border-color .25s}
 .hmw-input:focus{outline:none;border-color:var(--pri)}
 .hmw-input::placeholder{color:rgba(167,169,190,.5)}
+.group-picker{margin-top:1rem}
+.group-picker select{width:100%;padding:.7rem 1rem;border-radius:12px;background:var(--surf);border:1.5px solid var(--dim);color:var(--text);font-size:.9rem;font-family:inherit}
 
 /* ── Scoring ── */
 .score-section{margin-top:2rem}
@@ -179,74 +137,110 @@ body{
 .score-label{display:flex;align-items:center;gap:.5rem;font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem}
 .score-label .emoji{font-size:1rem}
 .score-options{display:flex;gap:.6rem}
-.score-btn{
-  flex:1;padding:.75rem .5rem;border:2px solid var(--dim);border-radius:14px;background:var(--surf);color:var(--muted);
-  font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;text-align:center;
-  transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;
-}
+.score-btn{flex:1;padding:.75rem .5rem;border:2px solid var(--dim);border-radius:14px;background:var(--surf);color:var(--muted);font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;text-align:center;transition:all .25s cubic-bezier(.4,0,.2,1)}
 .score-btn span{display:block;font-size:.65rem;font-weight:500;margin-top:2px;opacity:.7}
 .score-btn:active{transform:scale(.93)}
 .score-btn.sel-1{background:var(--score1);border-color:var(--score1);color:#fff;box-shadow:0 4px 16px rgba(100,116,139,.4);transform:scale(1.02)}
 .score-btn.sel-2{background:var(--score2);border-color:var(--score2);color:#fff;box-shadow:0 4px 16px rgba(245,158,11,.4);transform:scale(1.02)}
 .score-btn.sel-3{background:var(--score3);border-color:var(--score3);color:#fff;box-shadow:0 4px 16px rgba(16,185,129,.4);transform:scale(1.02)}
-
-/* ── Score Ring ── */
 .total-section{display:flex;flex-direction:column;align-items:center;margin:2rem 0}
 .score-ring{position:relative;width:130px;height:130px}
 .score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ring-bg{fill:none;stroke:var(--dim);stroke-width:8}
-.ring-fg{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1),stroke .4s}
+.ring-bg{fill:none;stroke:var(--dim);stroke-width:8}.ring-fg{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1),stroke .4s}
 .score-value{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .score-num{font-size:2.5rem;font-weight:900;line-height:1;transition:color .4s}
 .score-max{font-size:.8rem;color:var(--muted);margin-top:2px}
 .score-verdict{font-size:.8rem;font-weight:600;margin-top:.75rem;padding:.3rem .9rem;border-radius:20px;transition:all .4s}
-
 .form-actions{margin-top:2rem;display:flex;flex-direction:column;gap:.75rem}
 .delete-zone{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--dim)}
 
+/* ── Groups Screen ── */
+#groupsScreen{padding:0;padding-bottom:calc(var(--safe-bottom)+70px)}
+.groups-list{flex:1;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.group-card{background:var(--surf);border:1px solid var(--dim);border-radius:var(--radius);padding:1.1rem;cursor:pointer;transition:transform .2s,border-color .2s}
+.group-card:hover{border-color:rgba(108,99,255,.2)}
+.group-card:active{transform:scale(.98)}
+.group-card h3{font-size:1rem;font-weight:700;margin-bottom:.4rem}
+.group-card .group-meta{font-size:.8rem;color:var(--muted);display:flex;gap:1rem}
+.group-actions{padding:1rem 1.25rem;display:flex;gap:.75rem}
+.create-group-box{padding:1.25rem}
+
+/* ── Settings Screen ── */
+#settingsScreen{padding:0;padding-bottom:calc(var(--safe-bottom)+70px)}
+.settings-content{flex:1;padding:1.25rem;display:flex;flex-direction:column;gap:1rem}
+.settings-card{background:var(--surf);border:1px solid var(--dim);border-radius:var(--radius);padding:1.25rem}
+.settings-card h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.75rem}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--dim)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:.9rem;font-weight:500}
+.setting-value{font-size:.85rem;color:var(--muted)}
+.plan-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700;text-transform:uppercase}
+.plan-free{background:var(--surf2);color:var(--muted)}
+.plan-paid{background:rgba(108,99,255,.15);color:var(--pri)}
+.plan-trial{background:rgba(245,158,11,.15);color:var(--score2)}
+
+/* ── Pricing Screen ── */
+#pricingScreen{padding:0}
+.pricing-content{flex:1;padding:1.25rem;padding-bottom:calc(var(--safe-bottom)+24px)}
+.pricing-header{text-align:center;margin-bottom:2rem}
+.pricing-header h2{font-size:1.5rem;font-weight:900;margin-bottom:.5rem}
+.pricing-header p{color:var(--muted);font-size:.9rem}
+.pricing-cards{display:flex;flex-direction:column;gap:1rem}
+.pricing-card{background:var(--surf);border:1.5px solid var(--dim);border-radius:var(--radius);padding:1.5rem;text-align:center;position:relative;transition:.2s}
+.pricing-card.featured{border-color:var(--pri);box-shadow:0 0 40px rgba(108,99,255,.12)}
+.pricing-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--pri);color:#fff;padding:3px 14px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase}
+.pricing-card h3{font-size:1.1rem;font-weight:700;margin-bottom:.5rem}
+.pricing-price{font-size:2.5rem;font-weight:900;margin:.5rem 0}
+.pricing-price small{font-size:.85rem;font-weight:400;color:var(--muted)}
+.pricing-perks{list-style:none;text-align:left;margin:1.25rem 0}
+.pricing-perks li{padding:.4rem 0;color:var(--muted);font-size:.85rem;display:flex;align-items:center;gap:.5rem}
+.pricing-perks li::before{content:'✓';color:var(--pri);font-weight:700}
+.pricing-card .btn{margin-top:.5rem}
+
+/* ── Ad Gate Modal ── */
+.ad-gate{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.ad-gate.show{opacity:1;pointer-events:auto}
+.ad-gate-box{background:var(--surf);border-radius:20px;padding:2rem;text-align:center;max-width:320px;width:90%;transform:translateY(20px);transition:transform .3s}
+.ad-gate.show .ad-gate-box{transform:translateY(0)}
+.ad-gate-box h3{font-size:1.2rem;margin-bottom:.5rem}
+.ad-gate-box p{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem;line-height:1.5}
+.ad-timer{width:80px;height:80px;border-radius:50%;border:4px solid var(--dim);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:1.8rem;font-weight:900;color:var(--pri);position:relative}
+.ad-timer-ring{position:absolute;inset:-4px;border-radius:50%;border:4px solid transparent;border-top-color:var(--pri);animation:adSpin 5s linear}
+@keyframes adSpin{to{transform:rotate(1800deg)}}
+
 /* ── Dialog ── */
-.overlay{
-  position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
-  display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;
-  padding:1.25rem;padding-bottom:calc(var(--safe-bottom) + 1.25rem);
-}
+.overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;padding:1.25rem;padding-bottom:calc(var(--safe-bottom)+1.25rem)}
 .overlay.show{opacity:1;pointer-events:auto}
 .dialog{background:var(--surf);border-radius:20px;padding:1.75rem;width:100%;max-width:380px;transform:translateY(40px);transition:transform .3s cubic-bezier(.4,0,.2,1)}
 .overlay.show .dialog{transform:translateY(0)}
 .dialog h3{font-size:1.1rem;margin-bottom:.5rem}
 .dialog p{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem;line-height:1.5}
-.dialog-btns{display:flex;gap:.75rem}
-.dialog-btns .btn{flex:1}
+.dialog-btns{display:flex;gap:.75rem}.dialog-btns .btn{flex:1}
 
 /* ── Toast ── */
-#toasts{position:fixed;bottom:calc(var(--safe-bottom) + 90px);left:1rem;right:1rem;z-index:300;display:flex;flex-direction:column;gap:.5rem;align-items:center;pointer-events:none}
-.toast{padding:.75rem 1.25rem;border-radius:12px;font-size:.85rem;font-weight:600;pointer-events:auto;max-width:360px;width:100%;text-align:center;opacity:0;transform:translateY(16px);transition:all .3s ease}
+#toasts{position:fixed;bottom:calc(var(--safe-bottom)+80px);left:1rem;right:1rem;z-index:300;display:flex;flex-direction:column;gap:.5rem;align-items:center;pointer-events:none}
+.toast{padding:.75rem 1.25rem;border-radius:12px;font-size:.85rem;font-weight:600;pointer-events:auto;max-width:360px;width:100%;text-align:center;opacity:0;transform:translateY(16px);transition:all .3s}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast-success{background:rgba(16,185,129,.15);color:var(--emerald);border:1px solid rgba(16,185,129,.2)}
 .toast-error{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.2)}
 .toast-info{background:rgba(108,99,255,.15);color:var(--pri);border:1px solid rgba(108,99,255,.2)}
-
-/* ── Loading Bar ── */
 .loading-bar{position:fixed;top:0;left:0;right:0;height:3px;z-index:999;background:var(--pri);transform:scaleX(0);transform-origin:left;transition:transform .3s}
 .loading-bar.active{transform:scaleX(.7);transition:transform 8s cubic-bezier(.1,.5,.3,1)}
 .loading-bar.done{transform:scaleX(1);transition:transform .2s;opacity:0}
 
 @media(min-width:600px){
-  .ideas-list{max-width:560px;margin:0 auto;width:100%}
-  .form-body{max-width:560px;margin:0 auto;width:100%}
+  .ideas-list,.groups-list,.settings-content,.pricing-content,.form-body,.create-group-box{max-width:560px;margin-left:auto;margin-right:auto;width:100%}
   .auth-box{max-width:400px}
+  .pricing-cards{flex-direction:row}
+  .pricing-card{flex:1}
 }
 </style>
 </head>
 <body>
-
 <div class="loading-bar" id="loadingBar"></div>
 
 <!-- Splash -->
-<div class="screen active" id="splash">
-  <div class="logo-big">IdeaForge</div>
-  <div class="spinner"></div>
-</div>
+<div class="screen active" id="splash"><div class="logo-big">IdeaForge</div><div class="spinner"></div></div>
 
 <!-- Auth -->
 <div class="screen" id="authScreen">
@@ -258,28 +252,24 @@ body{
       <button class="auth-tab" data-tab="signup">Sign Up</button>
     </div>
     <div class="auth-error" id="authError"></div>
-    <div class="field">
-      <label>Email</label>
-      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="authPass" placeholder="Min. 6 characters" autocomplete="current-password">
-    </div>
+    <div class="field"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="field"><label>Password</label><input type="password" id="authPass" placeholder="Min. 6 characters" autocomplete="current-password"></div>
     <button class="btn btn-pri" id="authSubmit">Log In</button>
   </div>
 </div>
 
 <!-- Dashboard -->
 <div class="screen" id="dashScreen">
-  <div class="dash-header">
+  <div class="top-header">
     <h1>Idea<span>Forge</span></h1>
     <div class="header-actions">
-      <button class="icon-btn" id="logoutBtn" title="Log out">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <button class="icon-btn" id="refreshBtn" title="Refresh">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
       </button>
     </div>
   </div>
+  <div id="upgradeBannerSlot"></div>
+  <div id="adBannerSlot"></div>
   <div class="sort-bar">
     <button class="sort-pill active" data-sort="score">Top Score</button>
     <button class="sort-pill" data-sort="newest">Newest</button>
@@ -289,462 +279,484 @@ body{
   <button class="fab" id="fabBtn">+</button>
 </div>
 
+<!-- Groups -->
+<div class="screen" id="groupsScreen">
+  <div class="top-header"><h1>Groups</h1></div>
+  <div class="group-actions" id="groupActions">
+    <button class="btn btn-pri btn-sm" id="createGroupBtn" style="flex:1">+ Create Group</button>
+    <button class="btn btn-outline btn-sm" id="joinGroupBtn" style="flex:1">Join Group</button>
+  </div>
+  <div class="groups-list" id="groupsList"></div>
+</div>
+
+<!-- Settings -->
+<div class="screen" id="settingsScreen">
+  <div class="top-header"><h1>Settings</h1></div>
+  <div class="settings-content">
+    <div class="settings-card">
+      <h3>Account</h3>
+      <div class="setting-row"><span class="setting-label">Email</span><span class="setting-value" id="settEmail">–</span></div>
+      <div class="setting-row"><span class="setting-label">Member since</span><span class="setting-value" id="settJoined">–</span></div>
+    </div>
+    <div class="settings-card">
+      <h3>Plan</h3>
+      <div class="setting-row"><span class="setting-label">Current plan</span><span id="settPlan"></span></div>
+      <div class="setting-row" id="settTrialRow" style="display:none"><span class="setting-label">Trial ends</span><span class="setting-value" id="settTrial">–</span></div>
+      <div id="settPlanActions" style="margin-top:.75rem"></div>
+    </div>
+    <div class="settings-card">
+      <h3>Stats</h3>
+      <div class="setting-row"><span class="setting-label">Total ideas</span><span class="setting-value" id="settIdeas">0</span></div>
+      <div class="setting-row"><span class="setting-label">Groups</span><span class="setting-value" id="settGroups">0</span></div>
+    </div>
+    <button class="btn btn-ghost" id="logoutBtn" style="margin-top:1rem;color:var(--red)">Log Out</button>
+  </div>
+</div>
+
+<!-- Pricing -->
+<div class="screen slide-right" id="pricingScreen">
+  <div class="form-header">
+    <button class="back-btn" id="pricingBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h2>Choose Your Plan</h2>
+  </div>
+  <div class="pricing-content">
+    <div class="pricing-header">
+      <h2>Unlock IdeaForge</h2>
+      <p>No ads. Create groups. Full power.</p>
+    </div>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <h3>Free</h3>
+        <div class="pricing-price">$0</div>
+        <ul class="pricing-perks">
+          <li>Unlimited ideas (with ads)</li>
+          <li>Join groups</li>
+          <li>Basic scoring</li>
+        </ul>
+        <button class="btn btn-ghost" disabled>Current</button>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-badge">Best Value</div>
+        <h3>Yearly</h3>
+        <div class="pricing-price">$9.99 <small>/ year</small></div>
+        <ul class="pricing-perks">
+          <li>7-day free trial</li>
+          <li>No ads ever</li>
+          <li>Create groups & invite</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="btn btn-pri" onclick="checkout('yearly')">Start Free Trial</button>
+      </div>
+      <div class="pricing-card">
+        <h3>Quarterly</h3>
+        <div class="pricing-price">$2.99 <small>/ 3 months</small></div>
+        <ul class="pricing-perks">
+          <li>7-day free trial</li>
+          <li>No ads ever</li>
+          <li>Create groups & invite</li>
+        </ul>
+        <button class="btn btn-outline" onclick="checkout('quarterly')">Start Free Trial</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Form -->
 <div class="screen slide-right" id="formScreen">
   <div class="form-header">
-    <button class="back-btn" id="formBack">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
+    <button class="back-btn" id="formBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <h2 id="formTitle">New Idea</h2>
   </div>
   <div class="form-body">
     <div class="hmw-prefix">HOW MIGHT WE...</div>
     <textarea class="hmw-input" id="hmwInput" placeholder="...reduce food waste in restaurants?"></textarea>
+    <div class="group-picker" id="groupPicker">
+      <div class="field"><label>Add to group (optional)</label><select id="groupSelect"><option value="">Personal (no group)</option></select></div>
+    </div>
     <div class="score-section">
-      <div class="score-row">
-        <div class="score-label"><span class="emoji">💥</span> Impact</div>
-        <div class="score-options" data-field="impact">
-          <button class="score-btn" data-value="1">1<span>Small</span></button>
-          <button class="score-btn" data-value="2">2<span>Medium</span></button>
-          <button class="score-btn" data-value="3">3<span>Huge</span></button>
-        </div>
-      </div>
-      <div class="score-row">
-        <div class="score-label"><span class="emoji">📐</span> Size</div>
-        <div class="score-options" data-field="size">
-          <button class="score-btn" data-value="1">1<span>Niche</span></button>
-          <button class="score-btn" data-value="2">2<span>Growing</span></button>
-          <button class="score-btn" data-value="3">3<span>Massive</span></button>
-        </div>
-      </div>
-      <div class="score-row">
-        <div class="score-label"><span class="emoji">🔥</span> Motivation</div>
-        <div class="score-options" data-field="motivation">
-          <button class="score-btn" data-value="1">1<span>Meh</span></button>
-          <button class="score-btn" data-value="2">2<span>Excited</span></button>
-          <button class="score-btn" data-value="3">3<span>All in</span></button>
-        </div>
-      </div>
-      <div class="score-row">
-        <div class="score-label"><span class="emoji">🛠️</span> Feasibility</div>
-        <div class="score-options" data-field="feasibility">
-          <button class="score-btn" data-value="1">1<span>Hard</span></button>
-          <button class="score-btn" data-value="2">2<span>Doable</span></button>
-          <button class="score-btn" data-value="3">3<span>Easy</span></button>
-        </div>
-      </div>
+      <div class="score-row"><div class="score-label"><span class="emoji">💥</span> Impact</div><div class="score-options" data-field="impact"><button class="score-btn" data-value="1">1<span>Small</span></button><button class="score-btn" data-value="2">2<span>Medium</span></button><button class="score-btn" data-value="3">3<span>Huge</span></button></div></div>
+      <div class="score-row"><div class="score-label"><span class="emoji">📐</span> Size</div><div class="score-options" data-field="size"><button class="score-btn" data-value="1">1<span>Niche</span></button><button class="score-btn" data-value="2">2<span>Growing</span></button><button class="score-btn" data-value="3">3<span>Massive</span></button></div></div>
+      <div class="score-row"><div class="score-label"><span class="emoji">🔥</span> Motivation</div><div class="score-options" data-field="motivation"><button class="score-btn" data-value="1">1<span>Meh</span></button><button class="score-btn" data-value="2">2<span>Excited</span></button><button class="score-btn" data-value="3">3<span>All in</span></button></div></div>
+      <div class="score-row"><div class="score-label"><span class="emoji">🛠️</span> Feasibility</div><div class="score-options" data-field="feasibility"><button class="score-btn" data-value="1">1<span>Hard</span></button><button class="score-btn" data-value="2">2<span>Doable</span></button><button class="score-btn" data-value="3">3<span>Easy</span></button></div></div>
     </div>
-    <div class="total-section" id="totalSection">
-      <div class="score-ring">
-        <svg viewBox="0 0 100 100">
-          <circle class="ring-bg" cx="50" cy="50" r="42"/>
-          <circle class="ring-fg" id="ringFg" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"/>
-        </svg>
-        <div class="score-value">
-          <div class="score-num" id="totalNum">–</div>
-          <div class="score-max">/12</div>
-        </div>
-      </div>
-      <div class="score-verdict" id="verdict"></div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-pri" id="saveBtn" disabled>Save Idea</button>
-    </div>
-    <div class="delete-zone" id="deleteZone" style="display:none">
-      <button class="btn btn-danger" id="deleteBtn">Delete Idea</button>
-    </div>
+    <div class="total-section"><div class="score-ring"><svg viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="42"/><circle class="ring-fg" id="ringFg" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"/></svg><div class="score-value"><div class="score-num" id="totalNum">–</div><div class="score-max">/12</div></div></div><div class="score-verdict" id="verdict"></div></div>
+    <div class="form-actions"><button class="btn btn-pri" id="saveBtn" disabled>Save Idea</button></div>
+    <div class="delete-zone" id="deleteZone" style="display:none"><button class="btn btn-danger" id="deleteBtn">Delete Idea</button></div>
   </div>
 </div>
 
-<!-- Confirm dialog -->
-<div class="overlay" id="confirmOverlay">
-  <div class="dialog">
-    <h3 id="confirmTitle">Delete idea?</h3>
-    <p id="confirmMsg">This can't be undone.</p>
-    <div class="dialog-btns">
-      <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
-      <button class="btn btn-danger" id="confirmOk">Delete</button>
-    </div>
+<!-- Ad Gate Modal -->
+<div class="ad-gate" id="adGate">
+  <div class="ad-gate-box">
+    <h3>Quick Ad Break</h3>
+    <p>Watch a short ad to add your idea, or upgrade for unlimited ad-free access.</p>
+    <div class="ad-timer"><span id="adCountdown">5</span><div class="ad-timer-ring"></div></div>
+    <button class="btn btn-pri" id="adSkipBtn" disabled>Continue</button>
+    <button class="btn btn-ghost" onclick="showScreen('pricingScreen')" style="margin-top:.5rem">Upgrade to remove ads</button>
   </div>
 </div>
+
+<!-- Confirm Dialog -->
+<div class="overlay" id="confirmOverlay">
+  <div class="dialog"><h3 id="confirmTitle">Delete idea?</h3><p id="confirmMsg">This can't be undone.</p><div class="dialog-btns"><button class="btn btn-ghost" id="confirmCancel">Cancel</button><button class="btn btn-danger" id="confirmOk">Delete</button></div></div>
+</div>
+
+<!-- Create Group Dialog -->
+<div class="overlay" id="createGroupOverlay">
+  <div class="dialog"><h3>Create Group</h3><p>Name your ideation group. You'll get a shareable invite link.</p><div class="field"><input type="text" id="newGroupName" placeholder="e.g. Startup Ideas"></div><div class="dialog-btns"><button class="btn btn-ghost" id="createGroupCancel">Cancel</button><button class="btn btn-pri" id="createGroupOk">Create</button></div></div>
+</div>
+
+<!-- Join Group Dialog -->
+<div class="overlay" id="joinGroupOverlay">
+  <div class="dialog"><h3>Join Group</h3><p>Enter the invite code or paste the full link.</p><div class="field"><input type="text" id="joinCode" placeholder="e.g. a1b2c3d4"></div><div class="dialog-btns"><button class="btn btn-ghost" id="joinGroupCancel">Cancel</button><button class="btn btn-pri" id="joinGroupOk">Join</button></div></div>
+</div>
+
+<!-- Invite Link Dialog -->
+<div class="overlay" id="inviteOverlay">
+  <div class="dialog"><h3>Invite Link</h3><p>Share this link to invite others:</p><div class="field"><input type="text" id="inviteLink" readonly style="font-size:.8rem"></div><div class="dialog-btns"><button class="btn btn-ghost" id="inviteClose">Close</button><button class="btn btn-pri" id="inviteCopy">Copy Link</button></div></div>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav" id="bottomNav" style="display:none">
+  <button class="nav-item active" data-screen="dashScreen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    <span>Ideas</span>
+  </button>
+  <button class="nav-item" data-screen="groupsScreen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    <span>Groups</span>
+  </button>
+  <button class="nav-item" data-screen="settingsScreen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span>Settings</span>
+  </button>
+</nav>
 
 <div id="toasts"></div>
 
-<!-- Step 1: Nuke any old service workers and caches -->
+<!-- Nuke old service workers -->
 <script>
-(function() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(r) {
-      r.forEach(function(sw) { sw.unregister(); });
-    });
-  }
-  if (window.caches) {
-    caches.keys().then(function(k) {
-      k.forEach(function(n) { caches.delete(n); });
-    });
-  }
-})();
+if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(s){s.unregister()})});if(window.caches)caches.keys().then(function(k){k.forEach(function(n){caches.delete(n)})})}
 </script>
-
-<!-- Step 2: Load Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- Step 3: App -->
 <script>
-(function() {
-  'use strict';
+(function(){
+'use strict';
+var SB_URL='https://bwywjvtmxxgqeqiedskj.supabase.co';
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3eXdqdnRteHhncWVxaWVkc2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NTYxNjgsImV4cCI6MjA3NDEzMjE2OH0.7q_rdYrI6oGgWvmwUVnBveVSWTnF4wftezXDn8LrKhg';
 
-  var SB_URL = 'https://bwywjvtmxxgqeqiedskj.supabase.co';
-  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3eXdqdnRteHhncWVxaWVkc2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NTYxNjgsImV4cCI6MjA3NDEzMjE2OH0.7q_rdYrI6oGgWvmwUVnBveVSWTnF4wftezXDn8LrKhg';
+// Stripe price IDs — set these after creating products in Stripe
+var STRIPE_PRICES={quarterly:null,yearly:null}; // e.g. 'price_xxx'
 
-  var sb = null;
-  var state = {
-    user: null, ideas: [], editingId: null,
-    scores: { impact: 0, size: 0, motivation: 0, feasibility: 0 },
-    sort: 'score', authMode: 'login'
-  };
+var sb,state={user:null,profile:null,ideas:[],groups:[],myGroups:[],editingId:null,scores:{impact:0,size:0,motivation:0,feasibility:0},sort:'score',authMode:'login',currentScreen:'splash'};
+var $=function(s){return document.querySelector(s)};
+var $$=function(s){return document.querySelectorAll(s)};
 
-  var $ = function(s) { return document.querySelector(s); };
-  var $$ = function(s) { return document.querySelectorAll(s); };
+function isPaid(){var p=state.profile;return p&&(p.plan==='quarterly'||p.plan==='yearly')&&(p.subscription_status==='active'||p.subscription_status==='trialing')}
+function isTrial(){return state.profile&&state.profile.subscription_status==='trialing'}
 
-  // ── Show/hide screens ──
-  function show(id) {
-    $$('.screen').forEach(function(s) { s.classList.remove('active'); });
-    document.getElementById(id).classList.add('active');
-    var fab = $('#fabBtn');
-    if (id === 'dashScreen') { fab.classList.remove('hidden'); }
-    else { fab.classList.add('hidden'); }
-  }
+// ── Navigation ──
+function showScreen(id){
+  $$('.screen').forEach(function(s){s.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+  state.currentScreen=id;
+  var fab=$('#fabBtn'),nav=$('#bottomNav');
+  var mainScreens=['dashScreen','groupsScreen','settingsScreen'];
+  if(mainScreens.indexOf(id)>=0){nav.style.display='flex';fab.classList.toggle('hidden',id!=='dashScreen')}
+  else{nav.style.display='none';fab.classList.add('hidden')}
+  $$('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.screen===id)});
+}
+window.showScreen=showScreen;
 
-  function loading(on) {
-    var bar = $('#loadingBar');
-    bar.classList.remove('active', 'done');
-    if (on) { void bar.offsetWidth; bar.classList.add('active'); }
-    else { bar.classList.add('done'); setTimeout(function() { bar.classList.remove('done'); }, 400); }
-  }
+function loading(on){var b=$('#loadingBar');b.classList.remove('active','done');if(on){void b.offsetWidth;b.classList.add('active')}else{b.classList.add('done');setTimeout(function(){b.classList.remove('done')},400)}}
+function toast(m,t){var e=document.createElement('div');e.className='toast toast-'+(t||'info');e.textContent=m;$('#toasts').appendChild(e);requestAnimationFrame(function(){e.classList.add('show')});setTimeout(function(){e.classList.remove('show');setTimeout(function(){e.remove()},300)},3000)}
 
-  function toast(msg, type) {
-    var el = document.createElement('div');
-    el.className = 'toast toast-' + (type || 'info');
-    el.textContent = msg;
-    $('#toasts').appendChild(el);
-    requestAnimationFrame(function() { el.classList.add('show'); });
-    setTimeout(function() {
-      el.classList.remove('show');
-      setTimeout(function() { el.remove(); }, 300);
-    }, 3000);
-  }
-
-  // ── Init ──
-  function init() {
-    // Check supabase loaded
-    if (!window.supabase || !window.supabase.createClient) {
-      console.error('Supabase JS not loaded');
-      show('authScreen');
-      toast('Failed to load — please refresh', 'error');
-      return;
-    }
-
-    try {
-      sb = window.supabase.createClient(SB_URL, SB_KEY);
-    } catch (e) {
-      console.error('Supabase init failed:', e);
-      show('authScreen');
-      toast('Connection error', 'error');
-      return;
-    }
-
-    // Check existing session
-    sb.auth.getSession().then(function(res) {
-      var session = res.data ? res.data.session : null;
-      if (res.error) console.error('getSession error:', res.error);
-
-      if (session && session.user) {
-        state.user = session.user;
-        show('dashScreen');
-        loadIdeas();
-      } else {
-        show('authScreen');
-      }
-    }).catch(function(e) {
-      console.error('getSession failed:', e);
-      show('authScreen');
-    });
-
-    // Listen for auth changes
-    sb.auth.onAuthStateChange(function(event, session) {
-      if (event === 'SIGNED_IN' && session) {
-        state.user = session.user;
-        loadIdeas().then(function() { show('dashScreen'); });
-      } else if (event === 'SIGNED_OUT') {
-        state.user = null;
-        state.ideas = [];
-        show('authScreen');
-      }
-    });
-  }
-
-  // ── Auth ──
-  $$('.auth-tab').forEach(function(tab) {
-    tab.onclick = function() {
-      $$('.auth-tab').forEach(function(t) { t.classList.remove('active'); });
-      tab.classList.add('active');
-      state.authMode = tab.dataset.tab;
-      $('#authSubmit').textContent = state.authMode === 'login' ? 'Log In' : 'Sign Up';
-      $('#authError').classList.remove('show');
-    };
+// ── Init ──
+function init(){
+  if(!window.supabase||!window.supabase.createClient){showScreen('authScreen');toast('Failed to load','error');return}
+  try{sb=window.supabase.createClient(SB_URL,SB_KEY)}catch(e){showScreen('authScreen');return}
+  sb.auth.getSession().then(function(r){
+    var session=r.data?r.data.session:null;
+    if(session&&session.user){state.user=session.user;afterLogin()}
+    else showScreen('authScreen');
+  }).catch(function(){showScreen('authScreen')});
+  sb.auth.onAuthStateChange(function(ev,session){
+    if(ev==='SIGNED_IN'&&session){state.user=session.user;afterLogin()}
+    else if(ev==='SIGNED_OUT'){state.user=null;state.profile=null;state.ideas=[];state.groups=[];showScreen('authScreen')}
   });
+}
 
-  $('#authSubmit').onclick = function() {
-    var email = $('#authEmail').value.trim();
-    var pass = $('#authPass').value;
-    var err = $('#authError');
-    err.classList.remove('show');
+function afterLogin(){
+  showScreen('dashScreen');
+  loadProfile();
+  loadIdeas();
+  loadGroups();
+  handleJoinCode();
+  handleCheckoutReturn();
+}
 
-    if (!email || !pass) { err.textContent = 'Email and password required.'; err.classList.add('show'); return; }
-    if (pass.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.classList.add('show'); return; }
+function handleJoinCode(){
+  var path=window.location.pathname;
+  var m=path.match(/^\/join\/([a-zA-Z0-9]+)/);
+  if(m){joinGroupByCode(m[1]);history.replaceState(null,'','/')}
+  var stored=sessionStorage.getItem('pendingJoin');
+  if(stored){sessionStorage.removeItem('pendingJoin');joinGroupByCode(stored)}
+}
 
-    var btn = $('#authSubmit');
-    btn.disabled = true;
-    btn.textContent = 'Please wait...';
-    loading(true);
+function handleCheckoutReturn(){
+  var params=new URLSearchParams(window.location.search);
+  if(params.get('checkout')==='success'){toast('Welcome to IdeaForge Pro!','success');loadProfile();history.replaceState(null,'',window.location.pathname)}
+  else if(params.get('checkout')==='cancel'){toast('Checkout canceled','info');history.replaceState(null,'',window.location.pathname)}
+}
 
-    var promise;
-    if (state.authMode === 'login') {
-      promise = sb.auth.signInWithPassword({ email: email, password: pass });
-    } else {
-      promise = sb.auth.signUp({ email: email, password: pass });
-    }
+// ── Auth ──
+$$('.auth-tab').forEach(function(tab){tab.onclick=function(){$$('.auth-tab').forEach(function(t){t.classList.remove('active')});tab.classList.add('active');state.authMode=tab.dataset.tab;$('#authSubmit').textContent=state.authMode==='login'?'Log In':'Sign Up';$('#authError').classList.remove('show')}});
+$('#authSubmit').onclick=function(){
+  var email=$('#authEmail').value.trim(),pass=$('#authPass').value,err=$('#authError');
+  err.classList.remove('show');
+  if(!email||!pass){err.textContent='Email and password required.';err.classList.add('show');return}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.classList.add('show');return}
+  var btn=$('#authSubmit');btn.disabled=true;btn.textContent='Please wait...';loading(true);
+  var p=state.authMode==='login'?sb.auth.signInWithPassword({email:email,password:pass}):sb.auth.signUp({email:email,password:pass});
+  p.then(function(r){
+    if(r.error){err.textContent=r.error.message;err.classList.add('show')}
+    else if(state.authMode==='signup'&&r.data.user&&!r.data.session)toast('Check your email to confirm your account','info');
+  }).catch(function(){err.textContent='Network error.';err.classList.add('show')}).finally(function(){btn.disabled=false;btn.textContent=state.authMode==='login'?'Log In':'Sign Up';loading(false)})
+};
+$('#authPass').onkeydown=function(e){if(e.key==='Enter')$('#authSubmit').click()};
+$('#authEmail').onkeydown=function(e){if(e.key==='Enter')$('#authPass').focus()};
+$('#logoutBtn').onclick=function(){sb.auth.signOut();toast('Logged out','info')};
 
-    promise.then(function(result) {
-      if (result.error) {
-        err.textContent = result.error.message;
-        err.classList.add('show');
-      } else if (state.authMode === 'signup' && result.data.user && !result.data.session) {
-        toast('Check your email to confirm your account', 'info');
-      }
-    }).catch(function() {
-      err.textContent = 'Network error. Try again.';
-      err.classList.add('show');
-    }).finally(function() {
-      btn.disabled = false;
-      btn.textContent = state.authMode === 'login' ? 'Log In' : 'Sign Up';
-      loading(false);
-    });
-  };
-
-  $('#authPass').onkeydown = function(e) { if (e.key === 'Enter') $('#authSubmit').click(); };
-  $('#authEmail').onkeydown = function(e) { if (e.key === 'Enter') $('#authPass').focus(); };
-  $('#logoutBtn').onclick = function() { sb.auth.signOut(); toast('Logged out', 'info'); };
-
-  // ── CRUD ──
-  function loadIdeas() {
-    loading(true);
-    return sb.from('ideas').select('*').order('total_score', { ascending: false }).then(function(res) {
-      if (res.error) { toast('Load failed: ' + res.error.message, 'error'); }
-      else { state.ideas = res.data || []; renderIdeas(); }
-      loading(false);
-    }).catch(function() { loading(false); });
-  }
-
-  function saveIdea() {
-    var problem = $('#hmwInput').value.trim();
-    var s = state.scores;
-    if (!problem || !s.impact || !s.size || !s.motivation || !s.feasibility) return;
-
-    var btn = $('#saveBtn');
-    btn.disabled = true;
-    loading(true);
-
-    var payload = { problem: problem, impact: s.impact, size: s.size, motivation: s.motivation, feasibility: s.feasibility };
-    var promise;
-
-    if (state.editingId) {
-      promise = sb.from('ideas').update(payload).eq('id', state.editingId).select().single();
-    } else {
-      payload.user_id = state.user.id;
-      promise = sb.from('ideas').insert([payload]).select().single();
-    }
-
-    promise.then(function(res) {
-      if (res.error) { toast('Save failed: ' + res.error.message, 'error'); return; }
-      if (state.editingId) {
-        var idx = state.ideas.findIndex(function(i) { return i.id === state.editingId; });
-        if (idx >= 0) state.ideas[idx] = res.data;
-        toast('Idea updated', 'success');
-      } else {
-        state.ideas.unshift(res.data);
-        toast('Idea saved!', 'success');
-      }
-      renderIdeas();
-      show('dashScreen');
-    }).catch(function(e) {
-      toast('Save failed: ' + e.message, 'error');
-    }).finally(function() {
-      btn.disabled = false;
-      loading(false);
-    });
-  }
-
-  function deleteIdea(id) {
-    loading(true);
-    sb.from('ideas').delete().eq('id', id).then(function(res) {
-      if (res.error) { toast('Delete failed: ' + res.error.message, 'error'); }
-      else {
-        state.ideas = state.ideas.filter(function(i) { return i.id !== id; });
-        renderIdeas();
-        toast('Idea deleted', 'info');
-        show('dashScreen');
-      }
-      loading(false);
-    });
-  }
-
-  // ── Sorting ──
-  $$('.sort-pill').forEach(function(pill) {
-    pill.onclick = function() {
-      $$('.sort-pill').forEach(function(p) { p.classList.remove('active'); });
-      pill.classList.add('active');
-      state.sort = pill.dataset.sort;
-      renderIdeas();
-    };
+// ── Profile ──
+function loadProfile(){
+  sb.from('profiles').select('*').eq('user_id',state.user.id).single().then(function(r){
+    if(r.error){console.error('Profile load:',r.error);return}
+    state.profile=r.data;
+    updateUI();
   });
+}
+function updateUI(){
+  var p=state.profile;if(!p)return;
+  // Settings
+  $('#settEmail').textContent=state.user.email;
+  $('#settJoined').textContent=new Date(p.created_at).toLocaleDateString();
+  $('#settIdeas').textContent=state.ideas.length;
+  $('#settGroups').textContent=state.groups.length;
+  // Plan badge
+  var planEl=$('#settPlan');
+  if(isPaid()){planEl.innerHTML='<span class="plan-badge '+(isTrial()?'plan-trial':'plan-paid')+'">'+p.plan+(isTrial()?' (trial)':'')+'</span>'}
+  else{planEl.innerHTML='<span class="plan-badge plan-free">Free</span>'}
+  // Trial info
+  if(isTrial()&&p.trial_ends_at){$('#settTrialRow').style.display='';$('#settTrial').textContent=new Date(p.trial_ends_at).toLocaleDateString()}
+  else{$('#settTrialRow').style.display='none'}
+  // Plan actions
+  var actions=$('#settPlanActions');
+  if(isPaid())actions.innerHTML='<button class="btn btn-outline btn-sm" onclick="manageSubscription()">Manage Subscription</button>';
+  else actions.innerHTML='<button class="btn btn-pri btn-sm" onclick="showScreen(\'pricingScreen\')">Upgrade</button>';
+  // Upgrade banner on dashboard
+  var slot=$('#upgradeBannerSlot');
+  if(!isPaid())slot.innerHTML='<div class="upgrade-banner" onclick="showScreen(\'pricingScreen\')"><div class="text"><div class="title">Go Pro — No Ads</div><div class="sub">7-day free trial. Cancel anytime.</div></div><div class="arrow">→</div></div>';
+  else slot.innerHTML='';
+  // Ad banner
+  var adSlot=$('#adBannerSlot');
+  if(!isPaid())adSlot.innerHTML='<div class="ad-banner">Sponsored · <a href="#" onclick="showScreen(\'pricingScreen\');return false">Remove ads</a></div>';
+  else adSlot.innerHTML='';
+  // Group create button visibility
+  if(!isPaid())$('#createGroupBtn').textContent='⭐ Create Group (Pro)';
+  else $('#createGroupBtn').textContent='+ Create Group';
+}
 
-  function sortedIdeas() {
-    var arr = state.ideas.slice();
-    if (state.sort === 'score') arr.sort(function(a, b) { return b.total_score - a.total_score; });
-    else if (state.sort === 'newest') arr.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
-    else if (state.sort === 'oldest') arr.sort(function(a, b) { return new Date(a.created_at) - new Date(b.created_at); });
-    return arr;
-  }
+// ── Stripe Checkout ──
+window.checkout=function(plan){
+  if(!STRIPE_PRICES[plan]){toast('Stripe not configured yet. Set price IDs in code.','error');return}
+  loading(true);
+  sb.auth.getSession().then(function(r){
+    return fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+r.data.session.access_token},body:JSON.stringify({priceId:STRIPE_PRICES[plan]})});
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d.url)window.location.href=d.url;else{toast(d.error||'Checkout failed','error');loading(false)}
+  }).catch(function(){toast('Network error','error');loading(false)});
+};
+window.manageSubscription=function(){
+  loading(true);
+  sb.auth.getSession().then(function(r){
+    return fetch('/api/create-portal',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+r.data.session.access_token}});
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d.url)window.location.href=d.url;else{toast(d.error||'Portal failed','error');loading(false)}
+  }).catch(function(){toast('Network error','error');loading(false)});
+};
+$('#pricingBack').onclick=function(){showScreen('settingsScreen')};
 
-  // ── Render ──
-  function scoreColor(t) {
-    if (t <= 5) return 'var(--red)'; if (t <= 7) return 'var(--orange)';
-    if (t <= 9) return 'var(--yellow)'; if (t <= 11) return 'var(--green)'; return 'var(--emerald)';
-  }
-  function pillColor(v) { if (v === 1) return 'var(--score1)'; if (v === 2) return 'var(--score2)'; return 'var(--score3)'; }
-  function timeAgo(d) {
-    var m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
-    if (m < 1) return 'just now'; if (m < 60) return m + 'm ago';
-    var h = Math.floor(m / 60); if (h < 24) return h + 'h ago';
-    var dy = Math.floor(h / 24); if (dy < 30) return dy + 'd ago'; return Math.floor(dy / 30) + 'mo ago';
-  }
-  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+// ── Ideas CRUD ──
+function loadIdeas(){
+  loading(true);
+  sb.from('ideas').select('*').order('total_score',{ascending:false}).then(function(r){
+    if(r.error)toast('Load failed: '+r.error.message,'error');
+    else{state.ideas=r.data||[];renderIdeas();updateUI()}
+    loading(false);
+  });
+}
+function saveIdea(){
+  var problem=$('#hmwInput').value.trim(),s=state.scores;
+  if(!problem||!s.impact||!s.size||!s.motivation||!s.feasibility)return;
+  var btn=$('#saveBtn');btn.disabled=true;loading(true);
+  var groupId=$('#groupSelect').value||null;
+  var payload={problem:problem,impact:s.impact,size:s.size,motivation:s.motivation,feasibility:s.feasibility,group_id:groupId};
+  var promise;
+  if(state.editingId)promise=sb.from('ideas').update(payload).eq('id',state.editingId).select().single();
+  else{payload.user_id=state.user.id;promise=sb.from('ideas').insert([payload]).select().single()}
+  promise.then(function(r){
+    if(r.error){toast('Save failed: '+r.error.message,'error');return}
+    if(state.editingId){var i=state.ideas.findIndex(function(x){return x.id===state.editingId});if(i>=0)state.ideas[i]=r.data;toast('Updated','success')}
+    else{state.ideas.unshift(r.data);toast('Saved!','success')}
+    renderIdeas();showScreen('dashScreen');
+  }).catch(function(e){toast('Error: '+e.message,'error')}).finally(function(){btn.disabled=false;loading(false)});
+}
+function deleteIdea(id){
+  loading(true);
+  sb.from('ideas').delete().eq('id',id).then(function(r){
+    if(r.error)toast('Error: '+r.error.message,'error');
+    else{state.ideas=state.ideas.filter(function(x){return x.id!==id});renderIdeas();toast('Deleted','info');showScreen('dashScreen')}
+    loading(false);
+  });
+}
 
-  function renderIdeas() {
-    var list = $('#ideasList');
-    var ideas = sortedIdeas();
-    if (!ideas.length) {
-      list.innerHTML = '<div class="empty-state"><div class="empty-icon">💡</div><h3>No ideas yet</h3><p>Tap + to capture your first "How Might We" idea and score it.</p></div>';
-      return;
-    }
-    list.innerHTML = ideas.map(function(idea, i) {
-      return '<div class="idea-card" data-id="' + idea.id + '" style="animation-delay:' + (i * 60) + 'ms">' +
-        '<div class="card-score" style="background:' + scoreColor(idea.total_score) + '">' + idea.total_score + '<small>/12</small></div>' +
-        '<div class="card-body"><div class="card-problem">' + esc(idea.problem) + '</div>' +
-        '<div class="card-meta"><div class="mini-scores">' +
-        '<div class="mini-pill" style="background:' + pillColor(idea.impact) + '"></div>' +
-        '<div class="mini-pill" style="background:' + pillColor(idea.size) + '"></div>' +
-        '<div class="mini-pill" style="background:' + pillColor(idea.motivation) + '"></div>' +
-        '<div class="mini-pill" style="background:' + pillColor(idea.feasibility) + '"></div>' +
-        '</div><span class="card-date">' + timeAgo(idea.created_at) + '</span></div></div></div>';
-    }).join('');
-    list.querySelectorAll('.idea-card').forEach(function(card) {
-      card.onclick = function() { openEdit(card.dataset.id); };
-    });
-  }
+// ── Sorting & Rendering ──
+$$('.sort-pill').forEach(function(p){p.onclick=function(){$$('.sort-pill').forEach(function(x){x.classList.remove('active')});p.classList.add('active');state.sort=p.dataset.sort;renderIdeas()}});
+function sortedIdeas(){var a=state.ideas.slice();if(state.sort==='score')a.sort(function(x,y){return y.total_score-x.total_score});else if(state.sort==='newest')a.sort(function(x,y){return new Date(y.created_at)-new Date(x.created_at)});else if(state.sort==='oldest')a.sort(function(x,y){return new Date(x.created_at)-new Date(y.created_at)});return a}
+function scoreColor(t){if(t<=5)return'var(--red)';if(t<=7)return'var(--orange)';if(t<=9)return'var(--yellow)';if(t<=11)return'var(--green)';return'var(--emerald)'}
+function pillColor(v){return v===1?'var(--score1)':v===2?'var(--score2)':'var(--score3)'}
+function timeAgo(d){var m=Math.floor((Date.now()-new Date(d).getTime())/60000);if(m<1)return'now';if(m<60)return m+'m';var h=Math.floor(m/60);if(h<24)return h+'h';var dy=Math.floor(h/24);if(dy<30)return dy+'d';return Math.floor(dy/30)+'mo'}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
 
-  // ── Form ──
-  function resetForm() {
-    state.editingId = null;
-    state.scores = { impact: 0, size: 0, motivation: 0, feasibility: 0 };
-    $('#hmwInput').value = '';
-    $$('.score-btn').forEach(function(b) { b.classList.remove('sel-1', 'sel-2', 'sel-3'); });
-    updateTotalDisplay();
-    $('#formTitle').textContent = 'New Idea';
-    $('#deleteZone').style.display = 'none';
-    $('#saveBtn').disabled = true;
-  }
+function renderIdeas(){
+  var list=$('#ideasList'),ideas=sortedIdeas();
+  if(!ideas.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">💡</div><h3>No ideas yet</h3><p>Tap + to capture your first idea.</p></div>';return}
+  var groupMap={};state.groups.forEach(function(g){groupMap[g.id]=g.name});
+  list.innerHTML=ideas.map(function(idea,i){
+    var groupBadge=idea.group_id&&groupMap[idea.group_id]?'<span class="card-group-badge">'+esc(groupMap[idea.group_id])+'</span>':'';
+    return'<div class="idea-card" data-id="'+idea.id+'" style="animation-delay:'+(i*50)+'ms"><div class="card-score" style="background:'+scoreColor(idea.total_score)+'">'+idea.total_score+'<small>/12</small></div><div class="card-body"><div class="card-problem">'+esc(idea.problem)+'</div><div class="card-meta"><div class="mini-scores"><div class="mini-pill" style="background:'+pillColor(idea.impact)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.size)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.motivation)+'"></div><div class="mini-pill" style="background:'+pillColor(idea.feasibility)+'"></div></div>'+groupBadge+'<span class="card-date">'+timeAgo(idea.created_at)+'</span></div></div></div>'
+  }).join('');
+  list.querySelectorAll('.idea-card').forEach(function(c){c.onclick=function(){openEdit(c.dataset.id)}});
+}
 
-  function openNew() { resetForm(); show('formScreen'); setTimeout(function() { $('#hmwInput').focus(); }, 400); }
+// ── Form ──
+function resetForm(){state.editingId=null;state.scores={impact:0,size:0,motivation:0,feasibility:0};$('#hmwInput').value='';$$('.score-btn').forEach(function(b){b.classList.remove('sel-1','sel-2','sel-3')});updateTotalDisplay();$('#formTitle').textContent='New Idea';$('#deleteZone').style.display='none';$('#saveBtn').disabled=true;$('#groupSelect').value='';populateGroupSelect()}
+function populateGroupSelect(){var sel=$('#groupSelect');sel.innerHTML='<option value="">Personal</option>';state.groups.forEach(function(g){sel.innerHTML+='<option value="'+g.id+'">'+esc(g.name)+'</option>'})}
 
-  function openEdit(id) {
-    var idea = state.ideas.find(function(i) { return i.id === id; });
-    if (!idea) return;
-    resetForm();
-    state.editingId = id;
-    state.scores = { impact: idea.impact, size: idea.size, motivation: idea.motivation, feasibility: idea.feasibility };
-    $('#hmwInput').value = idea.problem;
-    $('#formTitle').textContent = 'Edit Idea';
-    $('#deleteZone').style.display = 'block';
-    ['impact', 'size', 'motivation', 'feasibility'].forEach(function(field) {
-      var val = state.scores[field];
-      var container = document.querySelector('.score-options[data-field="' + field + '"]');
-      container.querySelectorAll('.score-btn').forEach(function(btn) {
-        btn.classList.remove('sel-1', 'sel-2', 'sel-3');
-        if (parseInt(btn.dataset.value) === val) btn.classList.add('sel-' + val);
-      });
-    });
-    updateTotalDisplay();
-    show('formScreen');
-  }
+function openNew(){
+  if(!isPaid()){showAdGate(function(){resetForm();showScreen('formScreen');setTimeout(function(){$('#hmwInput').focus()},400)});return}
+  resetForm();showScreen('formScreen');setTimeout(function(){$('#hmwInput').focus()},400);
+}
+function openEdit(id){
+  var idea=state.ideas.find(function(x){return x.id===id});if(!idea)return;
+  resetForm();state.editingId=id;
+  state.scores={impact:idea.impact,size:idea.size,motivation:idea.motivation,feasibility:idea.feasibility};
+  $('#hmwInput').value=idea.problem;$('#formTitle').textContent='Edit Idea';$('#deleteZone').style.display='block';
+  if(idea.group_id)$('#groupSelect').value=idea.group_id;
+  ['impact','size','motivation','feasibility'].forEach(function(f){var v=state.scores[f];var c=document.querySelector('.score-options[data-field="'+f+'"]');c.querySelectorAll('.score-btn').forEach(function(b){b.classList.remove('sel-1','sel-2','sel-3');if(parseInt(b.dataset.value)===v)b.classList.add('sel-'+v)})});
+  updateTotalDisplay();showScreen('formScreen');
+}
+$$('.score-options').forEach(function(g){g.querySelectorAll('.score-btn').forEach(function(b){b.onclick=function(){var f=g.dataset.field,v=parseInt(b.dataset.value);state.scores[f]=v;g.querySelectorAll('.score-btn').forEach(function(x){x.classList.remove('sel-1','sel-2','sel-3')});b.classList.add('sel-'+v);updateTotalDisplay();validateForm()}})});
+function updateTotalDisplay(){var s=state.scores,ok=s.impact&&s.size&&s.motivation&&s.feasibility,t=s.impact+s.size+s.motivation+s.feasibility,n=$('#totalNum'),r=$('#ringFg'),v=$('#verdict');if(!ok){n.textContent='–';n.style.color='var(--muted)';r.style.strokeDashoffset='264';r.style.stroke='var(--dim)';v.textContent='';v.style.background='none';return}n.textContent=t;var c=scoreColor(t);n.style.color=c;r.style.stroke=c;r.style.strokeDashoffset=264-(264*((t-4)/8));var labels={4:'Needs work',5:'Needs work',6:'Has potential',7:'Has potential',8:'Looking good',9:'Looking good',10:'Strong idea',11:'Strong idea',12:'Go for it!'};v.textContent=labels[t]||'';v.style.color=c;v.style.background='var(--surf)'}
+function validateForm(){var p=$('#hmwInput').value.trim(),s=state.scores;$('#saveBtn').disabled=!(p.length>0&&s.impact&&s.size&&s.motivation&&s.feasibility)}
+$('#hmwInput').oninput=validateForm;
+$('#saveBtn').onclick=saveIdea;
+$('#formBack').onclick=function(){showScreen('dashScreen')};
+$('#fabBtn').onclick=openNew;
+$('#refreshBtn').onclick=function(){loadIdeas();loadGroups()};
 
-  $$('.score-options').forEach(function(group) {
-    group.querySelectorAll('.score-btn').forEach(function(btn) {
-      btn.onclick = function() {
-        var field = group.dataset.field;
-        var val = parseInt(btn.dataset.value);
-        state.scores[field] = val;
-        group.querySelectorAll('.score-btn').forEach(function(b) { b.classList.remove('sel-1', 'sel-2', 'sel-3'); });
-        btn.classList.add('sel-' + val);
-        updateTotalDisplay();
-        validateForm();
-      };
+// ── Ad Gate (mock — swap in real AdSense later) ──
+var adCallback=null;
+function showAdGate(cb){
+  adCallback=cb;
+  var gate=$('#adGate'),countdown=$('#adCountdown'),skip=$('#adSkipBtn');
+  gate.classList.add('show');skip.disabled=true;
+  var t=5;countdown.textContent=t;
+  var iv=setInterval(function(){t--;countdown.textContent=t;if(t<=0){clearInterval(iv);skip.disabled=false;skip.textContent='Continue'}},1000);
+  skip.onclick=function(){gate.classList.remove('show');skip.textContent='Continue';if(adCallback)adCallback();adCallback=null};
+}
+
+// ── Delete ──
+var pendingDeleteId=null;
+$('#deleteBtn').onclick=function(){pendingDeleteId=state.editingId;$('#confirmOverlay').classList.add('show')};
+$('#confirmCancel').onclick=function(){$('#confirmOverlay').classList.remove('show');pendingDeleteId=null};
+$('#confirmOk').onclick=function(){$('#confirmOverlay').classList.remove('show');if(pendingDeleteId){deleteIdea(pendingDeleteId);pendingDeleteId=null}};
+$('#confirmOverlay').onclick=function(e){if(e.target===e.currentTarget){e.currentTarget.classList.remove('show');pendingDeleteId=null}};
+
+// ── Groups ──
+function loadGroups(){
+  sb.from('group_members').select('group_id').eq('user_id',state.user.id).then(function(r){
+    if(r.error||!r.data||!r.data.length){state.groups=[];renderGroups();return}
+    var ids=r.data.map(function(x){return x.group_id});
+    sb.from('groups').select('*').in('id',ids).order('created_at',{ascending:false}).then(function(r2){
+      state.groups=r2.data||[];renderGroups();populateGroupSelect();updateUI();
     });
   });
+}
+function renderGroups(){
+  var list=$('#groupsList');
+  if(!state.groups.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><h3>No groups yet</h3><p>Create a group or join one with an invite link.</p></div>';return}
+  list.innerHTML=state.groups.map(function(g){
+    var isOwner=g.owner_id===state.user.id;
+    return'<div class="group-card" data-id="'+g.id+'"><h3>'+esc(g.name)+'</h3><div class="group-meta"><span>'+(isOwner?'Owner':'Member')+'</span></div></div>'
+  }).join('');
+  list.querySelectorAll('.group-card').forEach(function(c){c.onclick=function(){showInviteLink(c.dataset.id)}});
+}
+function showInviteLink(groupId){
+  var g=state.groups.find(function(x){return x.id===groupId});if(!g)return;
+  var base=window.location.origin;
+  $('#inviteLink').value=base+'/join/'+g.invite_code;
+  $('#inviteOverlay').classList.add('show');
+}
+$('#inviteCopy').onclick=function(){$('#inviteLink').select();document.execCommand('copy');toast('Link copied!','success')};
+$('#inviteClose').onclick=function(){$('#inviteOverlay').classList.remove('show')};
 
-  function updateTotalDisplay() {
-    var s = state.scores;
-    var allSet = s.impact && s.size && s.motivation && s.feasibility;
-    var total = s.impact + s.size + s.motivation + s.feasibility;
-    var numEl = $('#totalNum'), ringEl = $('#ringFg'), verdictEl = $('#verdict');
-    if (!allSet) {
-      numEl.textContent = '–'; numEl.style.color = 'var(--muted)';
-      ringEl.style.strokeDashoffset = '264'; ringEl.style.stroke = 'var(--dim)';
-      verdictEl.textContent = ''; verdictEl.style.background = 'none'; return;
-    }
-    numEl.textContent = total;
-    var color = scoreColor(total);
-    numEl.style.color = color;
-    ringEl.style.stroke = color;
-    ringEl.style.strokeDashoffset = 264 - (264 * ((total - 4) / 8));
-    var verdicts = { 4:'Needs work',5:'Needs work',6:'Has potential',7:'Has potential',8:'Looking good',9:'Looking good',10:'Strong idea',11:'Strong idea',12:'Go for it!' };
-    verdictEl.textContent = verdicts[total] || '';
-    verdictEl.style.color = color;
-    verdictEl.style.background = 'var(--surf)';
-  }
+$('#createGroupBtn').onclick=function(){
+  if(!isPaid()){showScreen('pricingScreen');toast('Groups are a Pro feature','info');return}
+  $('#createGroupOverlay').classList.add('show');$('#newGroupName').value='';
+};
+$('#createGroupCancel').onclick=function(){$('#createGroupOverlay').classList.remove('show')};
+$('#createGroupOk').onclick=function(){
+  var name=$('#newGroupName').value.trim();if(!name){toast('Name required','error');return}
+  loading(true);
+  sb.from('groups').insert([{name:name,owner_id:state.user.id}]).select().single().then(function(r){
+    if(r.error){toast('Error: '+r.error.message,'error');loading(false);return}
+    // Add self as owner member
+    sb.from('group_members').insert([{group_id:r.data.id,user_id:state.user.id,role:'owner'}]).then(function(){
+      $('#createGroupOverlay').classList.remove('show');
+      loadGroups();toast('Group created!','success');loading(false);
+    });
+  });
+};
 
-  function validateForm() {
-    var problem = $('#hmwInput').value.trim();
-    var s = state.scores;
-    $('#saveBtn').disabled = !(problem.length > 0 && s.impact && s.size && s.motivation && s.feasibility);
-  }
+$('#joinGroupBtn').onclick=function(){$('#joinGroupOverlay').classList.add('show');$('#joinCode').value=''};
+$('#joinGroupCancel').onclick=function(){$('#joinGroupOverlay').classList.remove('show')};
+$('#joinGroupOk').onclick=function(){
+  var raw=$('#joinCode').value.trim();
+  var code=raw.replace(/.*\/join\//,'').replace(/[^a-zA-Z0-9]/g,'');
+  if(!code){toast('Enter a code','error');return}
+  $('#joinGroupOverlay').classList.remove('show');
+  joinGroupByCode(code);
+};
+function joinGroupByCode(code){
+  loading(true);
+  sb.rpc('join_group_by_code',{code:code}).then(function(r){
+    if(r.error){toast('Join failed: '+r.error.message,'error')}
+    else if(r.data.error){toast(r.data.error,'info')}
+    else{toast('Joined '+r.data.group_name+'!','success');loadGroups()}
+    loading(false);
+  });
+}
 
-  $('#hmwInput').oninput = validateForm;
-  $('#saveBtn').onclick = saveIdea;
-  $('#formBack').onclick = function() { show('dashScreen'); };
-  $('#fabBtn').onclick = openNew;
+// ── Bottom Nav ──
+$$('.nav-item').forEach(function(n){n.onclick=function(){showScreen(n.dataset.screen)}});
 
-  // ── Delete ──
-  var pendingDeleteId = null;
-  $('#deleteBtn').onclick = function() { pendingDeleteId = state.editingId; $('#confirmOverlay').classList.add('show'); };
-  $('#confirmCancel').onclick = function() { $('#confirmOverlay').classList.remove('show'); pendingDeleteId = null; };
-  $('#confirmOk').onclick = function() { $('#confirmOverlay').classList.remove('show'); if (pendingDeleteId) { deleteIdea(pendingDeleteId); pendingDeleteId = null; } };
-  $('#confirmOverlay').onclick = function(e) { if (e.target === e.currentTarget) { e.currentTarget.classList.remove('show'); pendingDeleteId = null; } };
+// ── URL-based join (pre-auth) ──
+var joinPath=window.location.pathname.match(/^\/join\/([a-zA-Z0-9]+)/);
+if(joinPath)sessionStorage.setItem('pendingJoin',joinPath[1]);
 
-  // ── Boot ──
-  init();
+// ── Boot ──
+init();
 })();
 </script>
 </body>

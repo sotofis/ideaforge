@@ -138,8 +138,8 @@ ALTER TABLE profiles ALTER COLUMN id SET DEFAULT gen_random_uuid();
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, user_id, display_name)
-  VALUES (gen_random_uuid(), new.id, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)))
+  INSERT INTO public.profiles (id, user_id, email, display_name)
+  VALUES (gen_random_uuid(), new.id, new.email, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)))
   ON CONFLICT (user_id) DO NOTHING;
   RETURN new;
 END;
@@ -176,8 +176,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 5. BACKFILL: Ensure existing users have a profile row
 -- ============================================================
 
-INSERT INTO profiles (id, user_id, display_name)
-SELECT gen_random_uuid(), id, split_part(email, '@', 1)
+INSERT INTO profiles (id, user_id, email, display_name)
+SELECT gen_random_uuid(), id, email, split_part(email, '@', 1)
 FROM auth.users
 WHERE id NOT IN (SELECT user_id FROM profiles WHERE user_id IS NOT NULL)
 ON CONFLICT DO NOTHING;

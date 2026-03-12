@@ -385,14 +385,18 @@ Deno.serve(async (req: Request) => {
     // 7. Persist results
     await updateProgress(supabase, jobId, 95)
 
-    const overallScore = Math.round(
-      (synthesis.market_score +
-        synthesis.competition_score +
-        synthesis.need_score +
-        synthesis.business_score +
-        synthesis.technical_score) /
-        5,
-    )
+    // Hard clamp all scores to 1-5 range regardless of what Claude returns
+    function clamp(v: number): number { return Math.max(1, Math.min(5, Math.round(Number(v) || 3))) }
+    const ms = clamp(synthesis.market_score)
+    const cs = clamp(synthesis.competition_score)
+    const ns = clamp(synthesis.need_score)
+    const bs = clamp(synthesis.business_score)
+    const ts = clamp(synthesis.technical_score)
+    const overallScore = Math.round((ms + cs + ns + bs + ts) / 5)
+
+    // Validate recommendation
+    const validRecs = ['strong_yes', 'yes', 'maybe', 'no', 'strong_no']
+    const rec = validRecs.includes(synthesis.recommendation) ? synthesis.recommendation : 'maybe'
 
     // INSERT validation report
     const { error: reportError } = await supabase.from('validation_reports').insert({
@@ -404,13 +408,13 @@ Deno.serve(async (req: Request) => {
       need_validation: needData,
       business_model: businessData,
       technical_feasibility: technicalData,
-      market_score: synthesis.market_score,
-      competition_score: synthesis.competition_score,
-      need_score: synthesis.need_score,
-      business_score: synthesis.business_score,
-      technical_score: synthesis.technical_score,
-      executive_summary: synthesis.executive_summary,
-      recommendation: synthesis.recommendation,
+      market_score: ms,
+      competition_score: cs,
+      need_score: ns,
+      business_score: bs,
+      technical_score: ts,
+      executive_summary: synthesis.executive_summary || 'Analysis complete.',
+      recommendation: rec,
       created_at: new Date().toISOString(),
     })
 
@@ -444,7 +448,7 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({
         success: true,
         overall_score: overallScore,
-        recommendation: synthesis.recommendation,
+        recommendation: rec,
         failed_tasks: failedTasks.length > 0 ? failedTasks : undefined,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },

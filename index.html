@@ -62,18 +62,6 @@ body{
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ─── CONFIG SCREEN ─── */
-#configScreen{padding:2rem;align-items:center;justify-content:center}
-.config-box{
-  background:var(--surf);border-radius:var(--radius);
-  padding:2rem;width:100%;max-width:400px;
-}
-.config-box h2{font-size:1.4rem;margin-bottom:.5rem}
-.config-box p{color:var(--muted);font-size:.85rem;margin-bottom:1.5rem;line-height:1.5}
-.config-box code{
-  background:var(--bg);padding:.15rem .4rem;border-radius:6px;
-  font-size:.8rem;color:var(--pri);
-}
 
 /* ─── INPUTS ─── */
 .field{margin-bottom:1.25rem}
@@ -389,24 +377,6 @@ body{
 <div class="screen active" id="splash">
   <div class="logo-big">IdeaForge</div>
   <div class="spinner"></div>
-</div>
-
-<!-- Config -->
-<div class="screen" id="configScreen">
-  <div class="config-box">
-    <h2>Setup</h2>
-    <p>Enter your Supabase project credentials.<br>Find them in <code>Settings &gt; API</code>.</p>
-    <div class="field">
-      <label>Project URL</label>
-      <input type="url" id="cfgUrl" placeholder="https://xxxxx.supabase.co">
-    </div>
-    <div class="field">
-      <label>Anon Public Key</label>
-      <input type="text" id="cfgKey" placeholder="eyJhbGciOi...">
-    </div>
-    <button class="btn btn-pri" id="cfgSave">Connect</button>
-    <p style="margin-top:1rem;font-size:.75rem;color:var(--muted)">Credentials are saved locally in your browser.</p>
-  </div>
 </div>
 
 <!-- Auth -->

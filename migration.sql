@@ -3,15 +3,11 @@
 
 -- ============================================================
 -- 1. PROFILES: Add IdeaForge columns to existing profiles table
+--    Existing table has: id (uuid PK, FK to auth.users), email (NOT NULL), etc.
+--    IdeaForge uses user_id — we add it and keep it in sync with id.
 -- ============================================================
 
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
--- Ensure unique constraint on user_id for ON CONFLICT to work
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'profiles_user_id_key') THEN
-    ALTER TABLE profiles ADD CONSTRAINT profiles_user_id_key UNIQUE (user_id);
-  END IF;
-END $$;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS display_name text;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_customer_id text;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan text DEFAULT 'free';
@@ -19,8 +15,16 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS subscription_status text DEFAULT '
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS trial_ends_at timestamptz;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS current_period_end timestamptz;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ad_credits int DEFAULT 0;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
+
+-- Backfill user_id = id for all existing rows (id is the auth user UUID)
+UPDATE profiles SET user_id = id WHERE user_id IS NULL;
+
+-- Ensure unique constraint on user_id for ON CONFLICT to work
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'profiles_user_id_key') THEN
+    ALTER TABLE profiles ADD CONSTRAINT profiles_user_id_key UNIQUE (user_id);
+  END IF;
+END $$;
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
@@ -55,58 +59,42 @@ CREATE INDEX IF NOT EXISTS ideas_group_idx ON ideas (group_id) WHERE group_id IS
 -- 3. ALL POLICIES (now that all tables exist)
 -- ============================================================
 
--- Profiles policies
 DROP POLICY IF EXISTS "ideaforge_profiles_select" ON profiles;
 CREATE POLICY "ideaforge_profiles_select" ON profiles FOR SELECT USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "ideaforge_profiles_update" ON profiles;
 CREATE POLICY "ideaforge_profiles_update" ON profiles FOR UPDATE USING (auth.uid() = user_id);
 
--- Groups policies
 DROP POLICY IF EXISTS "Members can view groups" ON groups;
 CREATE POLICY "Members can view groups" ON groups
-  FOR SELECT USING (
-    id IN (SELECT group_id FROM group_members WHERE user_id = auth.uid())
-  );
+  FOR SELECT USING (id IN (SELECT group_id FROM group_members WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "Owner can update group" ON groups;
-CREATE POLICY "Owner can update group" ON groups
-  FOR UPDATE USING (owner_id = auth.uid());
+CREATE POLICY "Owner can update group" ON groups FOR UPDATE USING (owner_id = auth.uid());
 
 DROP POLICY IF EXISTS "Owner can delete group" ON groups;
-CREATE POLICY "Owner can delete group" ON groups
-  FOR DELETE USING (owner_id = auth.uid());
+CREATE POLICY "Owner can delete group" ON groups FOR DELETE USING (owner_id = auth.uid());
 
 DROP POLICY IF EXISTS "Users can create groups" ON groups;
-CREATE POLICY "Users can create groups" ON groups
-  FOR INSERT WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "Users can create groups" ON groups FOR INSERT WITH CHECK (auth.uid() = owner_id);
 
 DROP POLICY IF EXISTS "Anyone can lookup by invite code" ON groups;
-CREATE POLICY "Anyone can lookup by invite code" ON groups
-  FOR SELECT USING (true);
+CREATE POLICY "Anyone can lookup by invite code" ON groups FOR SELECT USING (true);
 
--- Group members policies
 DROP POLICY IF EXISTS "Members can view memberships" ON group_members;
 CREATE POLICY "Members can view memberships" ON group_members
-  FOR SELECT USING (
-    group_id IN (SELECT group_id FROM group_members gm WHERE gm.user_id = auth.uid())
-  );
+  FOR SELECT USING (group_id IN (SELECT group_id FROM group_members gm WHERE gm.user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "Owner can manage members" ON group_members;
 CREATE POLICY "Owner can manage members" ON group_members
-  FOR ALL USING (
-    group_id IN (SELECT id FROM groups WHERE owner_id = auth.uid())
-  );
+  FOR ALL USING (group_id IN (SELECT id FROM groups WHERE owner_id = auth.uid()));
 
 DROP POLICY IF EXISTS "Users can join" ON group_members;
-CREATE POLICY "Users can join" ON group_members
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can join" ON group_members FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can leave" ON group_members;
-CREATE POLICY "Users can leave" ON group_members
-  FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Users can leave" ON group_members FOR DELETE USING (auth.uid() = user_id);
 
--- Ideas: update RLS for group access
 DROP POLICY IF EXISTS "Users can view own ideas" ON ideas;
 DROP POLICY IF EXISTS "Users can view own and group ideas" ON ideas;
 CREATE POLICY "Users can view own and group ideas" ON ideas
@@ -132,15 +120,13 @@ CREATE TRIGGER profiles_updated_at
   BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- Ensure id column has a default so INSERTs without explicit id work
-ALTER TABLE profiles ALTER COLUMN id SET DEFAULT gen_random_uuid();
-
+-- New user trigger: id = user auth id, user_id = same value
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
   INSERT INTO public.profiles (id, user_id, email, display_name)
-  VALUES (gen_random_uuid(), new.id, new.email, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)))
-  ON CONFLICT (user_id) DO NOTHING;
+  VALUES (new.id, new.id, new.email, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)))
+  ON CONFLICT (id) DO UPDATE SET user_id = EXCLUDED.user_id WHERE profiles.user_id IS NULL;
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -150,7 +136,6 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- Join group function
 CREATE OR REPLACE FUNCTION public.join_group_by_code(code text)
 RETURNS json AS $$
 DECLARE
@@ -171,13 +156,3 @@ BEGIN
   RETURN json_build_object('success', true, 'group_id', g.id, 'group_name', g.name);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- ============================================================
--- 5. BACKFILL: Ensure existing users have a profile row
--- ============================================================
-
-INSERT INTO profiles (id, user_id, email, display_name)
-SELECT gen_random_uuid(), id, email, split_part(email, '@', 1)
-FROM auth.users
-WHERE id NOT IN (SELECT user_id FROM profiles WHERE user_id IS NOT NULL)
-ON CONFLICT DO NOTHING;

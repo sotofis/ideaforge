@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0F0E17">
+<title>IdeaForge</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<style>
+/* ─── RESET & VARIABLES ─── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --pri:#6C63FF;--pri-dark:#5A52D5;--acc:#FF6584;
+  --bg:#0F0E17;--surf:#1A1929;--surf2:#232237;
+  --text:#FFFFFE;--muted:#A7A9BE;--dim:rgba(255,255,255,.06);
+  --radius:16px;
+  --score1:#64748B;--score2:#F59E0B;--score3:#10B981;
+  --red:#EF4444;--orange:#F97316;--yellow:#EAB308;--green:#22C55E;--emerald:#10B981;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--text);
+  height:100%;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ─── SCREENS ─── */
+.screen{
+  position:fixed;inset:0;
+  padding-top:calc(var(--safe-top) + 16px);
+  padding-bottom:calc(var(--safe-bottom) + 16px);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  opacity:0;pointer-events:none;
+  transition:opacity .35s ease,transform .35s ease;
+  transform:translateY(24px);
+  display:flex;flex-direction:column;
+  z-index:1;
+}
+.screen.active{opacity:1;pointer-events:auto;transform:translateY(0);z-index:2}
+.screen.slide-right{transform:translateX(40px)}
+.screen.slide-right.active{transform:translateX(0)}
+
+/* ─── SPLASH ─── */
+#splash{
+  z-index:100;opacity:1;pointer-events:auto;transform:none;
+  align-items:center;justify-content:center;gap:1.5rem;
+  background:var(--bg);
+}
+#splash.hidden{opacity:0;pointer-events:none}
+#splash .logo-big{font-size:2.5rem;font-weight:900;color:var(--pri)}
+.spinner{
+  width:32px;height:32px;border:3px solid var(--dim);
+  border-top-color:var(--pri);border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── CONFIG SCREEN ─── */
+#configScreen{padding:2rem;align-items:center;justify-content:center}
+.config-box{
+  background:var(--surf);border-radius:var(--radius);
+  padding:2rem;width:100%;max-width:400px;
+}
+.config-box h2{font-size:1.4rem;margin-bottom:.5rem}
+.config-box p{color:var(--muted);font-size:.85rem;margin-bottom:1.5rem;line-height:1.5}
+.config-box code{
+  background:var(--bg);padding:.15rem .4rem;border-radius:6px;
+  font-size:.8rem;color:var(--pri);
+}
+
+/* ─── INPUTS ─── */
+.field{margin-bottom:1.25rem}
+.field label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field textarea{
+  width:100%;padding:.8rem 1rem;
+  border:1.5px solid var(--dim);border-radius:12px;
+  background:var(--bg);color:var(--text);
+  font-size:1rem;font-family:inherit;
+  transition:border-color .25s;
+}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--pri)}
+.field textarea{resize:vertical;min-height:100px;line-height:1.5}
+
+/* ─── BUTTONS ─── */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+  width:100%;padding:.9rem;border-radius:14px;
+  font-size:1rem;font-weight:700;font-family:inherit;
+  cursor:pointer;border:none;
+  transition:transform .15s,box-shadow .25s,opacity .25s;
+}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;pointer-events:none}
+.btn-pri{background:var(--pri);color:#fff;box-shadow:0 4px 20px rgba(108,99,255,.35)}
+.btn-pri:hover{box-shadow:0 6px 28px rgba(108,99,255,.5)}
+.btn-ghost{background:transparent;color:var(--muted);font-weight:500;font-size:.9rem}
+.btn-danger{background:rgba(239,68,68,.12);color:var(--red);font-weight:600}
+.btn-danger:hover{background:rgba(239,68,68,.2)}
+
+/* ─── AUTH ─── */
+#authScreen{padding:2rem;align-items:center;justify-content:center}
+.auth-box{width:100%;max-width:380px}
+.auth-box .logo-big{text-align:center;font-size:2rem;font-weight:900;color:var(--pri);margin-bottom:.25rem}
+.auth-box .tagline{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:2.5rem}
+.auth-tabs{
+  display:flex;background:var(--surf);border-radius:12px;
+  padding:4px;margin-bottom:2rem;
+}
+.auth-tab{
+  flex:1;padding:.6rem;text-align:center;
+  border-radius:10px;font-weight:600;font-size:.9rem;
+  background:none;border:none;color:var(--muted);
+  cursor:pointer;transition:.25s;font-family:inherit;
+}
+.auth-tab.active{background:var(--pri);color:#fff}
+.auth-error{
+  background:rgba(239,68,68,.1);color:var(--red);
+  padding:.75rem 1rem;border-radius:10px;
+  font-size:.85rem;margin-bottom:1rem;
+  display:none;
+}
+.auth-error.show{display:block}
+
+/* ─── DASHBOARD ─── */
+#dashScreen{padding:0}
+.dash-header{
+  padding:1rem 1.25rem;padding-top:calc(var(--safe-top) + 1rem);
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+  background:rgba(15,14,23,.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--dim);
+}
+.dash-header h1{font-size:1.35rem;font-weight:800}
+.dash-header h1 span{color:var(--pri)}
+.header-actions{display:flex;gap:.5rem;align-items:center}
+.icon-btn{
+  width:40px;height:40px;border-radius:12px;
+  background:var(--surf);border:1px solid var(--dim);
+  color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;transition:.2s;
+}
+.icon-btn:hover{background:var(--surf2);color:var(--text)}
+
+.sort-bar{
+  display:flex;gap:.5rem;padding:.75rem 1.25rem;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+.sort-pill{
+  padding:.4rem .9rem;border-radius:20px;
+  font-size:.8rem;font-weight:600;white-space:nowrap;
+  background:var(--surf);border:1px solid var(--dim);
+  color:var(--muted);cursor:pointer;transition:.2s;
+  font-family:inherit;
+}
+.sort-pill.active{background:var(--pri);color:#fff;border-color:var(--pri)}
+
+.ideas-list{
+  flex:1;padding:1rem 1.25rem;padding-bottom:calc(var(--safe-bottom) + 100px);
+  display:flex;flex-direction:column;gap:.75rem;
+}
+
+/* ─── IDEA CARD ─── */
+.idea-card{
+  background:var(--surf);border:1px solid var(--dim);
+  border-radius:var(--radius);padding:1.1rem;
+  display:flex;gap:1rem;align-items:flex-start;
+  cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;
+  animation:cardIn .4s ease backwards;
+}
+.idea-card:active{transform:scale(.98)}
+.idea-card:hover{border-color:rgba(108,99,255,.2);box-shadow:0 4px 20px rgba(0,0,0,.2)}
+@keyframes cardIn{from{opacity:0;transform:translateY(16px)}}
+.card-score{
+  flex-shrink:0;width:52px;height:52px;
+  border-radius:14px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  font-weight:900;font-size:1.3rem;line-height:1;
+  color:#fff;position:relative;
+}
+.card-score small{font-size:.6rem;font-weight:500;opacity:.7;margin-top:2px}
+.card-body{flex:1;min-width:0}
+.card-problem{
+  font-size:.92rem;font-weight:500;line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  margin-bottom:.6rem;
+}
+.card-meta{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.mini-scores{display:flex;gap:4px}
+.mini-pill{
+  width:8px;height:8px;border-radius:3px;
+}
+.card-date{font-size:.72rem;color:var(--muted)}
+
+/* ─── EMPTY STATE ─── */
+.empty-state{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:3rem;gap:1rem;
+  color:var(--muted);
+}
+.empty-icon{font-size:4rem;opacity:.5}
+.empty-state h3{font-size:1.1rem;color:var(--text)}
+.empty-state p{font-size:.9rem;max-width:260px;line-height:1.5}
+
+/* ─── FAB ─── */
+.fab{
+  position:fixed;bottom:calc(var(--safe-bottom) + 24px);right:20px;
+  width:60px;height:60px;border-radius:18px;
+  background:var(--pri);color:#fff;
+  border:none;font-size:2rem;font-weight:300;
+  cursor:pointer;z-index:20;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 28px rgba(108,99,255,.5);
+  transition:transform .2s,box-shadow .2s;
+}
+.fab:hover{transform:scale(1.08);box-shadow:0 8px 36px rgba(108,99,255,.6)}
+.fab:active{transform:scale(.95)}
+.fab.hidden{transform:scale(0);pointer-events:none}
+
+/* ─── FORM SCREEN ─── */
+#formScreen{padding:0}
+.form-header{
+  padding:1rem 1.25rem;padding-top:calc(var(--safe-top) + 1rem);
+  display:flex;align-items:center;gap:1rem;
+  position:sticky;top:0;z-index:10;
+  background:rgba(15,14,23,.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--dim);
+}
+.form-header h2{font-size:1.1rem;font-weight:700;flex:1}
+.back-btn{
+  width:40px;height:40px;border-radius:12px;
+  background:var(--surf);border:1px solid var(--dim);
+  color:var(--text);font-size:1.2rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:.2s;
+}
+.back-btn:hover{background:var(--surf2)}
+
+.form-body{flex:1;padding:1.25rem;padding-bottom:calc(var(--safe-bottom) + 24px)}
+
+/* HMW input */
+.hmw-prefix{
+  font-size:.85rem;font-weight:700;color:var(--pri);
+  margin-bottom:.5rem;letter-spacing:.03em;
+}
+.hmw-input{
+  width:100%;padding:1rem;
+  background:var(--surf);border:1.5px solid var(--dim);
+  border-radius:14px;color:var(--text);
+  font-size:1.05rem;font-family:inherit;line-height:1.5;
+  resize:none;min-height:80px;
+  transition:border-color .25s;
+}
+.hmw-input:focus{outline:none;border-color:var(--pri)}
+.hmw-input::placeholder{color:rgba(167,169,190,.5)}
+
+/* ─── SCORE ROW ─── */
+.score-section{margin-top:2rem}
+.score-row{margin-bottom:1.5rem}
+.score-label{
+  display:flex;align-items:center;gap:.5rem;
+  font-size:.8rem;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.05em;
+  margin-bottom:.6rem;
+}
+.score-label .emoji{font-size:1rem}
+.score-options{display:flex;gap:.6rem}
+.score-btn{
+  flex:1;padding:.75rem .5rem;
+  border:2px solid var(--dim);border-radius:14px;
+  background:var(--surf);color:var(--muted);
+  font-family:inherit;font-size:.95rem;font-weight:700;
+  cursor:pointer;text-align:center;
+  transition:all .25s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden;
+}
+.score-btn span{display:block;font-size:.65rem;font-weight:500;margin-top:2px;opacity:.7}
+.score-btn:active{transform:scale(.93)}
+
+.score-btn.sel-1{background:var(--score1);border-color:var(--score1);color:#fff;box-shadow:0 4px 16px rgba(100,116,139,.4);transform:scale(1.02)}
+.score-btn.sel-2{background:var(--score2);border-color:var(--score2);color:#fff;box-shadow:0 4px 16px rgba(245,158,11,.4);transform:scale(1.02)}
+.score-btn.sel-3{background:var(--score3);border-color:var(--score3);color:#fff;box-shadow:0 4px 16px rgba(16,185,129,.4);transform:scale(1.02)}
+
+/* ─── TOTAL SCORE RING ─── */
+.total-section{
+  display:flex;flex-direction:column;align-items:center;
+  margin:2rem 0;
+}
+.score-ring{position:relative;width:130px;height:130px}
+.score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--dim);stroke-width:8}
+.ring-fg{
+  fill:none;stroke-width:8;stroke-linecap:round;
+  transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1),stroke .4s;
+}
+.score-value{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.score-num{font-size:2.5rem;font-weight:900;line-height:1;transition:color .4s}
+.score-max{font-size:.8rem;color:var(--muted);margin-top:2px}
+.score-verdict{
+  font-size:.8rem;font-weight:600;margin-top:.75rem;
+  padding:.3rem .9rem;border-radius:20px;
+  transition:all .4s;
+}
+
+/* ─── FORM ACTIONS ─── */
+.form-actions{margin-top:2rem;display:flex;flex-direction:column;gap:.75rem}
+.delete-zone{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--dim)}
+
+/* ─── CONFIRM DIALOG ─── */
+.overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+  padding:1.25rem;padding-bottom:calc(var(--safe-bottom) + 1.25rem);
+}
+.overlay.show{opacity:1;pointer-events:auto}
+.dialog{
+  background:var(--surf);border-radius:20px;
+  padding:1.75rem;width:100%;max-width:380px;
+  transform:translateY(40px);transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+.overlay.show .dialog{transform:translateY(0)}
+.dialog h3{font-size:1.1rem;margin-bottom:.5rem}
+.dialog p{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem;line-height:1.5}
+.dialog-btns{display:flex;gap:.75rem}
+.dialog-btns .btn{flex:1}
+
+/* ─── TOAST ─── */
+#toasts{
+  position:fixed;bottom:calc(var(--safe-bottom) + 90px);left:1rem;right:1rem;
+  z-index:300;display:flex;flex-direction:column;gap:.5rem;
+  align-items:center;pointer-events:none;
+}
+.toast{
+  padding:.75rem 1.25rem;border-radius:12px;
+  font-size:.85rem;font-weight:600;
+  pointer-events:auto;max-width:360px;width:100%;
+  text-align:center;
+  opacity:0;transform:translateY(16px);
+  transition:all .3s ease;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast-success{background:rgba(16,185,129,.15);color:var(--emerald);border:1px solid rgba(16,185,129,.2)}
+.toast-error{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.toast-info{background:rgba(108,99,255,.15);color:var(--pri);border:1px solid rgba(108,99,255,.2)}
+
+/* ─── LOADING BAR ─── */
+.loading-bar{
+  position:fixed;top:0;left:0;right:0;height:3px;z-index:999;
+  background:var(--pri);transform:scaleX(0);transform-origin:left;
+  transition:transform .3s;
+}
+.loading-bar.active{transform:scaleX(.7);transition:transform 8s cubic-bezier(.1,.5,.3,1)}
+.loading-bar.done{transform:scaleX(1);transition:transform .2s;opacity:0}
+
+/* ─── RESPONSIVE ─── */
+@media(min-width:600px){
+  .ideas-list{max-width:560px;margin:0 auto;width:100%}
+  .form-body{max-width:560px;margin:0 auto;width:100%}
+  .auth-box{max-width:400px}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading bar -->
+<div class="loading-bar" id="loadingBar"></div>
+
+<!-- Splash -->
+<div class="screen active" id="splash">
+  <div class="logo-big">IdeaForge</div>
+  <div class="spinner"></div>
+</div>
+
+<!-- Config -->
+<div class="screen" id="configScreen">
+  <div class="config-box">
+    <h2>Setup</h2>
+    <p>Enter your Supabase project credentials.<br>Find them in <code>Settings &gt; API</code>.</p>
+    <div class="field">
+      <label>Project URL</label>
+      <input type="url" id="cfgUrl" placeholder="https://xxxxx.supabase.co">
+    </div>
+    <div class="field">
+      <label>Anon Public Key</label>
+      <input type="text" id="cfgKey" placeholder="eyJhbGciOi...">
+    </div>
+    <button class="btn btn-pri" id="cfgSave">Connect</button>
+    <p style="margin-top:1rem;font-size:.75rem;color:var(--muted)">Credentials are saved locally in your browser.</p>
+  </div>
+</div>
+
+<!-- Auth -->
+<div class="screen" id="authScreen">
+  <div class="auth-box">
+    <div class="logo-big">IdeaForge</div>
+    <p class="tagline">Score your next big idea</p>
+    <div class="auth-error" id="authError"></div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="authEmail" value="philipp.pattera@myles-innovation.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="authPass" placeholder="Min. 6 characters" autocomplete="current-password">
+    </div>
+    <button class="btn btn-pri" id="authSubmit">Sign In</button>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="screen" id="dashScreen">
+  <div class="dash-header">
+    <h1>Idea<span>Forge</span></h1>
+    <div class="header-actions">
+      <button class="icon-btn" id="logoutBtn" title="Log out">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="sort-bar">
+    <button class="sort-pill active" data-sort="score">Top Score</button>
+    <button class="sort-pill" data-sort="newest">Newest</button>
+    <button class="sort-pill" data-sort="oldest">Oldest</button>
+  </div>
+  <div class="ideas-list" id="ideasList"></div>
+  <button class="fab" id="fabBtn">+</button>
+</div>
+
+<!-- Form (New / Edit) -->
+<div class="screen slide-right" id="formScreen">
+  <div class="form-header">
+    <button class="back-btn" id="formBack">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2 id="formTitle">New Idea</h2>
+  </div>
+  <div class="form-body">
+    <div class="hmw-prefix">HOW MIGHT WE...</div>
+    <textarea class="hmw-input" id="hmwInput" placeholder="...reduce food waste in restaurants?"></textarea>
+
+    <div class="score-section">
+      <div class="score-row">
+        <div class="score-label"><span class="emoji">💥</span> Impact</div>
+        <div class="score-options" data-field="impact">
+          <button class="score-btn" data-value="1">1<span>Small</span></button>
+          <button class="score-btn" data-value="2">2<span>Medium</span></button>
+          <button class="score-btn" data-value="3">3<span>Huge</span></button>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-label"><span class="emoji">📐</span> Size</div>
+        <div class="score-options" data-field="size">
+          <button class="score-btn" data-value="1">1<span>Niche</span></button>
+          <button class="score-btn" data-value="2">2<span>Growing</span></button>
+          <button class="score-btn" data-value="3">3<span>Massive</span></button>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-label"><span class="emoji">🔥</span> Motivation</div>
+        <div class="score-options" data-field="motivation">
+          <button class="score-btn" data-value="1">1<span>Meh</span></button>
+          <button class="score-btn" data-value="2">2<span>Excited</span></button>
+          <button class="score-btn" data-value="3">3<span>All in</span></button>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-label"><span class="emoji">🛠️</span> Feasibility</div>
+        <div class="score-options" data-field="feasibility">
+          <button class="score-btn" data-value="1">1<span>Hard</span></button>
+          <button class="score-btn" data-value="2">2<span>Doable</span></button>
+          <button class="score-btn" data-value="3">3<span>Easy</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Score Ring -->
+    <div class="total-section" id="totalSection">
+      <div class="score-ring">
+        <svg viewBox="0 0 100 100">
+          <circle class="ring-bg" cx="50" cy="50" r="42"/>
+          <circle class="ring-fg" id="ringFg" cx="50" cy="50" r="42"
+            stroke-dasharray="264" stroke-dashoffset="264"/>
+        </svg>
+        <div class="score-value">
+          <div class="score-num" id="totalNum">–</div>
+          <div class="score-max">/12</div>
+        </div>
+      </div>
+      <div class="score-verdict" id="verdict"></div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-pri" id="saveBtn" disabled>Save Idea</button>
+    </div>
+    <div class="delete-zone" id="deleteZone" style="display:none">
+      <button class="btn btn-danger" id="deleteBtn">Delete Idea</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div class="overlay" id="confirmOverlay">
+  <div class="dialog">
+    <h3 id="confirmTitle">Delete idea?</h3>
+    <p id="confirmMsg">This can't be undone.</p>
+    <div class="dialog-btns">
+      <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
+      <button class="btn btn-danger" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ═══════════════════════════════════════
+   IdeaForge — Main Application
+   ═══════════════════════════════════════ */
+
+// ── State ──
+const state = {
+  user: null,
+  ideas: [],
+  editingId: null,
+  scores: { impact: 0, size: 0, motivation: 0, feasibility: 0 },
+  sort: 'score',
+  authMode: 'login',
+};
+
+let sb = null; // Supabase client
+
+// ── DOM refs ──
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+// ── Supabase credentials ──
+const SB_URL = 'https://bwywjvtmxxgqeqiedskj.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3eXdqdnRteHhncWVxaWVkc2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NTYxNjgsImV4cCI6MjA3NDEzMjE2OH0.7q_rdYrI6oGgWvmwUVnBveVSWTnF4wftezXDn8LrKhg';
+
+// ── Init ──
+async function init() {
+  try {
+    sb = window.supabase.createClient(SB_URL, SB_KEY);
+  } catch (e) {
+    toast('Failed to connect to Supabase', 'error');
+    return;
+  }
+
+  // Timeout fallback if onAuthStateChange never fires
+  const splashTimeout = setTimeout(() => {
+    $('#splash').classList.remove('active');
+    navigate('authScreen');
+  }, 5000);
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'INITIAL_SESSION') {
+      clearTimeout(splashTimeout);
+      $('#splash').classList.remove('active');
+      if (session) {
+        state.user = session.user;
+        await loadIdeas();
+        navigate('dashScreen');
+      } else {
+        navigate('authScreen');
+      }
+    } else if (event === 'SIGNED_IN') {
+      $('#splash').classList.remove('active');
+      state.user = session.user;
+      await loadIdeas();
+      navigate('dashScreen');
+    } else if (event === 'SIGNED_OUT') {
+      state.user = null;
+      state.ideas = [];
+      navigate('authScreen');
+    }
+  });
+}
+
+// ── Config ──
+$('#cfgSave').onclick = () => {
+  const url = $('#cfgUrl').value.trim();
+  const key = $('#cfgKey').value.trim();
+  if (!url || !key) { toast('Both fields required', 'error'); return; }
+  if (!url.startsWith('https://')) { toast('URL must start with https://', 'error'); return; }
+  localStorage.setItem('sb_url', url);
+  localStorage.setItem('sb_key', key);
+  init();
+};
+
+// ── Navigation ──
+function navigate(screenId) {
+  $$('.screen').forEach((s) => s.classList.remove('active'));
+  const target = document.getElementById(screenId);
+  if (target) {
+    // Slight delay for CSS transition
+    requestAnimationFrame(() => target.classList.add('active'));
+  }
+  // Show/hide FAB
+  const fab = $('#fabBtn');
+  if (screenId === 'dashScreen') {
+    fab.classList.remove('hidden');
+  } else {
+    fab.classList.add('hidden');
+  }
+}
+
+// ── Loading bar ──
+function loading(on) {
+  const bar = $('#loadingBar');
+  bar.classList.remove('active', 'done');
+  if (on) {
+    void bar.offsetWidth; // reflow
+    bar.classList.add('active');
+  } else {
+    bar.classList.add('done');
+    setTimeout(() => bar.classList.remove('done'), 400);
+  }
+}
+
+// ── Toast ──
+function toast(message, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = message;
+  $('#toasts').appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
+
+// ── Auth (login only) ──
+$('#authSubmit').onclick = async () => {
+  const email = $('#authEmail').value.trim();
+  const pass = $('#authPass').value;
+  const errEl = $('#authError');
+  errEl.classList.remove('show');
+
+  if (!email || !pass) { errEl.textContent = 'Email and password required.'; errEl.classList.add('show'); return; }
+
+  const btn = $('#authSubmit');
+  btn.disabled = true;
+  btn.textContent = 'Signing in...';
+  loading(true);
+
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) {
+      errEl.textContent = error.message;
+      errEl.classList.add('show');
+    }
+  } catch (e) {
+    errEl.textContent = 'Network error. Try again.';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+    loading(false);
+  }
+};
+
+// Enter key submits auth
+$('#authPass').onkeydown = (e) => { if (e.key === 'Enter') $('#authSubmit').click(); };
+$('#authEmail').onkeydown = (e) => { if (e.key === 'Enter') $('#authPass').focus(); };
+
+// Logout
+$('#logoutBtn').onclick = async () => {
+  await sb.auth.signOut();
+  toast('Logged out', 'info');
+};
+
+// ── Ideas CRUD ──
+async function loadIdeas() {
+  loading(true);
+  const { data, error } = await sb.from('ideas')
+    .select('*')
+    .order('total_score', { ascending: false });
+
+  if (error) {
+    toast('Failed to load ideas: ' + error.message, 'error');
+    loading(false);
+    return;
+  }
+  state.ideas = data || [];
+  renderIdeas();
+  loading(false);
+}
+
+async function saveIdea() {
+  const problem = $('#hmwInput').value.trim();
+  const { impact, size, motivation, feasibility } = state.scores;
+
+  if (!problem || !impact || !size || !motivation || !feasibility) return;
+
+  const btn = $('#saveBtn');
+  btn.disabled = true;
+  loading(true);
+
+  const payload = {
+    problem,
+    impact,
+    size,
+    motivation,
+    feasibility,
+  };
+
+  try {
+    if (state.editingId) {
+      const { data, error } = await sb.from('ideas')
+        .update(payload)
+        .eq('id', state.editingId)
+        .select()
+        .single();
+      if (error) throw error;
+      const idx = state.ideas.findIndex((i) => i.id === state.editingId);
+      if (idx >= 0) state.ideas[idx] = data;
+      toast('Idea updated', 'success');
+    } else {
+      payload.user_id = state.user.id;
+      const { data, error } = await sb.from('ideas')
+        .insert([payload])
+        .select()
+        .single();
+      if (error) throw error;
+      state.ideas.unshift(data);
+      toast('Idea saved!', 'success');
+    }
+    renderIdeas();
+    navigate('dashScreen');
+  } catch (e) {
+    toast('Save failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    loading(false);
+  }
+}
+
+async function deleteIdea(id) {
+  loading(true);
+  try {
+    const { error } = await sb.from('ideas').delete().eq('id', id);
+    if (error) throw error;
+    state.ideas = state.ideas.filter((i) => i.id !== id);
+    renderIdeas();
+    toast('Idea deleted', 'info');
+    navigate('dashScreen');
+  } catch (e) {
+    toast('Delete failed: ' + e.message, 'error');
+  } finally {
+    loading(false);
+  }
+}
+
+// ── Sorting ──
+$$('.sort-pill').forEach((pill) => {
+  pill.onclick = () => {
+    $$('.sort-pill').forEach((p) => p.classList.remove('active'));
+    pill.classList.add('active');
+    state.sort = pill.dataset.sort;
+    renderIdeas();
+  };
+});
+
+function sortedIdeas() {
+  const arr = [...state.ideas];
+  switch (state.sort) {
+    case 'score': return arr.sort((a, b) => b.total_score - a.total_score);
+    case 'newest': return arr.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    case 'oldest': return arr.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    default: return arr;
+  }
+}
+
+// ── Render ──
+function scoreColor(total) {
+  if (total <= 5) return 'var(--red)';
+  if (total <= 7) return 'var(--orange)';
+  if (total <= 9) return 'var(--yellow)';
+  if (total <= 11) return 'var(--green)';
+  return 'var(--emerald)';
+}
+
+function pillColor(val) {
+  if (val === 1) return 'var(--score1)';
+  if (val === 2) return 'var(--score2)';
+  return 'var(--score3)';
+}
+
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return days + 'd ago';
+  return Math.floor(days / 30) + 'mo ago';
+}
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function renderIdeas() {
+  const list = $('#ideasList');
+  const ideas = sortedIdeas();
+
+  if (ideas.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">💡</div>
+        <h3>No ideas yet</h3>
+        <p>Tap + to capture your first "How Might We" idea and score it.</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = ideas.map((idea, i) => `
+    <div class="idea-card" data-id="${idea.id}" style="animation-delay:${i * 60}ms">
+      <div class="card-score" style="background:${scoreColor(idea.total_score)}">
+        ${idea.total_score}<small>/12</small>
+      </div>
+      <div class="card-body">
+        <div class="card-problem">${esc(idea.problem)}</div>
+        <div class="card-meta">
+          <div class="mini-scores">
+            <div class="mini-pill" style="background:${pillColor(idea.impact)}" title="Impact ${idea.impact}"></div>
+            <div class="mini-pill" style="background:${pillColor(idea.size)}" title="Size ${idea.size}"></div>
+            <div class="mini-pill" style="background:${pillColor(idea.motivation)}" title="Motivation ${idea.motivation}"></div>
+            <div class="mini-pill" style="background:${pillColor(idea.feasibility)}" title="Feasibility ${idea.feasibility}"></div>
+          </div>
+          <span class="card-date">${timeAgo(idea.created_at)}</span>
+        </div>
+      </div>
+    </div>`).join('');
+
+  // Card click → edit
+  list.querySelectorAll('.idea-card').forEach((card) => {
+    card.onclick = () => openEdit(card.dataset.id);
+  });
+}
+
+// ── Form ──
+function resetForm() {
+  state.editingId = null;
+  state.scores = { impact: 0, size: 0, motivation: 0, feasibility: 0 };
+  $('#hmwInput').value = '';
+  $$('.score-btn').forEach((b) => {
+    b.classList.remove('sel-1', 'sel-2', 'sel-3');
+  });
+  updateTotalDisplay();
+  $('#formTitle').textContent = 'New Idea';
+  $('#deleteZone').style.display = 'none';
+  $('#saveBtn').disabled = true;
+}
+
+function openNew() {
+  resetForm();
+  navigate('formScreen');
+  setTimeout(() => $('#hmwInput').focus(), 400);
+}
+
+function openEdit(id) {
+  const idea = state.ideas.find((i) => i.id === id);
+  if (!idea) return;
+
+  resetForm();
+  state.editingId = id;
+  state.scores = {
+    impact: idea.impact,
+    size: idea.size,
+    motivation: idea.motivation,
+    feasibility: idea.feasibility,
+  };
+
+  $('#hmwInput').value = idea.problem;
+  $('#formTitle').textContent = 'Edit Idea';
+  $('#deleteZone').style.display = 'block';
+
+  // Set score buttons
+  ['impact', 'size', 'motivation', 'feasibility'].forEach((field) => {
+    const val = state.scores[field];
+    const container = $(`.score-options[data-field="${field}"]`);
+    container.querySelectorAll('.score-btn').forEach((btn) => {
+      btn.classList.remove('sel-1', 'sel-2', 'sel-3');
+      if (parseInt(btn.dataset.value) === val) {
+        btn.classList.add('sel-' + val);
+      }
+    });
+  });
+
+  updateTotalDisplay();
+  navigate('formScreen');
+}
+
+// Score button clicks
+$$('.score-options').forEach((group) => {
+  group.querySelectorAll('.score-btn').forEach((btn) => {
+    btn.onclick = () => {
+      const field = group.dataset.field;
+      const val = parseInt(btn.dataset.value);
+      state.scores[field] = val;
+
+      group.querySelectorAll('.score-btn').forEach((b) => {
+        b.classList.remove('sel-1', 'sel-2', 'sel-3');
+      });
+      btn.classList.add('sel-' + val);
+
+      updateTotalDisplay();
+      validateForm();
+    };
+  });
+});
+
+function updateTotalDisplay() {
+  const { impact, size, motivation, feasibility } = state.scores;
+  const allSet = impact && size && motivation && feasibility;
+  const total = impact + size + motivation + feasibility;
+
+  const numEl = $('#totalNum');
+  const ringEl = $('#ringFg');
+  const verdictEl = $('#verdict');
+
+  if (!allSet) {
+    numEl.textContent = '–';
+    numEl.style.color = 'var(--muted)';
+    ringEl.style.strokeDashoffset = '264';
+    ringEl.style.stroke = 'var(--dim)';
+    verdictEl.textContent = '';
+    verdictEl.style.background = 'none';
+    return;
+  }
+
+  // Animate number
+  numEl.textContent = total;
+  const color = scoreColor(total);
+  numEl.style.color = color;
+  ringEl.style.stroke = color;
+
+  // Ring offset: 264 = full circumference, 0 = fully filled
+  const progress = (total - 4) / 8;
+  ringEl.style.strokeDashoffset = 264 - (264 * progress);
+
+  // Verdict
+  const verdicts = {
+    4: 'Needs work', 5: 'Needs work',
+    6: 'Has potential', 7: 'Has potential',
+    8: 'Looking good', 9: 'Looking good',
+    10: 'Strong idea', 11: 'Strong idea',
+    12: 'Go for it!',
+  };
+  verdictEl.textContent = verdicts[total] || '';
+  verdictEl.style.background = color.replace(')', ',.12)').replace('var(', 'rgba(');
+  // Use a simpler approach for verdict color
+  verdictEl.style.color = color;
+  verdictEl.style.background = 'var(--surf)';
+}
+
+function validateForm() {
+  const problem = $('#hmwInput').value.trim();
+  const { impact, size, motivation, feasibility } = state.scores;
+  const valid = problem.length > 0 && impact && size && motivation && feasibility;
+  $('#saveBtn').disabled = !valid;
+}
+
+$('#hmwInput').oninput = validateForm;
+
+// Save
+$('#saveBtn').onclick = saveIdea;
+
+// Back
+$('#formBack').onclick = () => navigate('dashScreen');
+
+// FAB
+$('#fabBtn').onclick = openNew;
+
+// ── Delete with confirmation ──
+let pendingDeleteId = null;
+
+$('#deleteBtn').onclick = () => {
+  pendingDeleteId = state.editingId;
+  $('#confirmOverlay').classList.add('show');
+};
+$('#confirmCancel').onclick = () => {
+  $('#confirmOverlay').classList.remove('show');
+  pendingDeleteId = null;
+};
+$('#confirmOk').onclick = async () => {
+  $('#confirmOverlay').classList.remove('show');
+  if (pendingDeleteId) {
+    await deleteIdea(pendingDeleteId);
+    pendingDeleteId = null;
+  }
+};
+
+// Close overlay on backdrop click
+$('#confirmOverlay').onclick = (e) => {
+  if (e.target === e.currentTarget) {
+    e.currentTarget.classList.remove('show');
+    pendingDeleteId = null;
+  }
+};
+
+// ── PWA Service Worker ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// ── Start ──
+init();
+</script>
+</body>
+</html>

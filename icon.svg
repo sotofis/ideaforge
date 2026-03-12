@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="108" fill="#6C63FF"/>
+  <g transform="translate(256,240)">
+    <circle r="120" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="24"/>
+    <circle r="120" fill="none" stroke="#fff" stroke-width="24" stroke-dasharray="754" stroke-dashoffset="188" stroke-linecap="round" transform="rotate(-90)"/>
+    <text y="15" text-anchor="middle" fill="#fff" font-family="system-ui,-apple-system,sans-serif" font-size="120" font-weight="900">IF</text>
+  </g>
+  <circle cx="256" cy="420" r="16" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="216" cy="420" r="16" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="296" cy="420" r="16" fill="rgba(255,255,255,0.4)"/>
+</svg>

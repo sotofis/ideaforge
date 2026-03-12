@@ -114,7 +114,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .empty-state p{font-size:.9rem;max-width:260px;line-height:1.5}
 
 /* ── FAB ── */
-.fab{position:fixed;bottom:calc(var(--safe-bottom)+80px);right:20px;width:60px;height:60px;border-radius:18px;background:var(--pri);color:#fff;border:none;font-size:2rem;font-weight:300;cursor:pointer;z-index:40;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 28px rgba(108,99,255,.5);transition:transform .2s,box-shadow .2s}
+.fab{position:fixed;bottom:calc(var(--safe-bottom)+68px);right:20px;width:56px;height:56px;border-radius:16px;background:var(--pri);color:#fff;border:none;font-size:1.8rem;font-weight:300;cursor:pointer;z-index:55;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 28px rgba(108,99,255,.5);transition:transform .2s,box-shadow .2s,opacity .2s}
 .fab:hover{transform:scale(1.08)}.fab:active{transform:scale(.95)}
 .fab.hidden{transform:scale(0);pointer-events:none}
 
@@ -643,7 +643,9 @@ function renderIdeas(){
 function resetForm(){state.editingId=null;state.scores={impact:0,size:0,motivation:0,feasibility:0};$('#hmwInput').value='';$$('.score-btn').forEach(function(b){b.classList.remove('sel-1','sel-2','sel-3')});updateTotalDisplay();$('#formTitle').textContent='New Idea';$('#deleteZone').style.display='none';$('#saveBtn').disabled=true;$('#groupSelect').value='';populateGroupSelect()}
 function populateGroupSelect(){var sel=$('#groupSelect');sel.innerHTML='<option value="">Personal</option>';state.groups.forEach(function(g){sel.innerHTML+='<option value="'+g.id+'">'+esc(g.name)+'</option>'})}
 
+var FREE_IDEA_LIMIT=10;
 function openNew(){
+  if(!isPaid()&&state.ideas.length>=FREE_IDEA_LIMIT){toast('Free plan limited to '+FREE_IDEA_LIMIT+' ideas. Upgrade for unlimited!','error');showScreen('pricingScreen');return}
   if(!isPaid()){showAdGate(function(){resetForm();showScreen('formScreen');setTimeout(function(){$('#hmwInput').focus()},400)});return}
   resetForm();showScreen('formScreen');setTimeout(function(){$('#hmwInput').focus()},400);
 }

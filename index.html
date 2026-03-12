@@ -379,7 +379,8 @@ body{
 <!-- Loading bar -->
 <div class="loading-bar" id="loadingBar"></div>
 
-<!-- Splash -->
+<!-- Splash (auto-hides after 3s via CSS as failsafe) -->
+<style>#splash.active{animation:forceHide 0s 3s forwards}@keyframes forceHide{to{opacity:0;pointer-events:none;z-index:-1}}</style>
 <div class="screen active" id="splash">
   <div class="logo-big">IdeaForge</div>
   <div class="spinner"></div>
@@ -1039,11 +1040,27 @@ $('#confirmOverlay').onclick = (e) => {
 
 // ── PWA Service Worker ──
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  // Unregister old service workers first to bust stale cache
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    regs.forEach((r) => r.unregister());
+  }).finally(() => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
 }
 
 // ── Start ──
-init();
+// Failsafe: if init somehow never resolves, show auth after 3s
+const initTimeout = setTimeout(() => {
+  document.getElementById('splash').classList.remove('active');
+  document.getElementById('authScreen').classList.add('active');
+}, 3000);
+
+init().then(() => clearTimeout(initTimeout)).catch((e) => {
+  console.error('Init error:', e);
+  clearTimeout(initTimeout);
+  document.getElementById('splash').classList.remove('active');
+  document.getElementById('authScreen').classList.add('active');
+});
 </script>
 </body>
 </html>

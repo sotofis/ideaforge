@@ -1,128 +1,183 @@
--- IdeaForge v2: Profiles, Groups, Subscriptions
--- Run AFTER setup.sql in Supabase SQL Editor
+-- IdeaForge v2: Safe migration for SHARED Supabase project
+-- Uses IF NOT EXISTS / ADD COLUMN IF NOT EXISTS to avoid conflicts
+-- Run in Supabase SQL Editor
 
--- 1. Profiles (auto-created on signup)
-create table profiles (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  display_name text,
-  stripe_customer_id text unique,
-  plan text not null default 'free' check (plan in ('free', 'quarterly', 'yearly')),
-  subscription_status text not null default 'none' check (subscription_status in ('none', 'trialing', 'active', 'canceled', 'past_due')),
-  trial_ends_at timestamptz,
-  current_period_end timestamptz,
-  ad_credits int not null default 0,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+-- ============================================================
+-- 1. PROFILES: Add IdeaForge columns to existing profiles table
+-- ============================================================
+
+-- Add columns only if they don't already exist
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS user_id uuid references auth.users(id) on delete cascade;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS display_name text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_customer_id text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan text default 'free';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS subscription_status text default 'none';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS trial_ends_at timestamptz;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS current_period_end timestamptz;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ad_credits int default 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS created_at timestamptz default now();
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS updated_at timestamptz default now();
+
+-- Ensure RLS is on (idempotent)
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Add IdeaForge RLS policies (drop first to be idempotent)
+DROP POLICY IF EXISTS "ideaforge_profiles_select" ON profiles;
+CREATE POLICY "ideaforge_profiles_select" ON profiles FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "ideaforge_profiles_update" ON profiles;
+CREATE POLICY "ideaforge_profiles_update" ON profiles FOR UPDATE USING (auth.uid() = user_id);
+
+-- Auto-create profile on signup (replace safely — other app may have its own version)
+-- We use CREATE OR REPLACE so it overwrites any existing version
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (user_id, display_name)
+  VALUES (new.id, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)))
+  ON CONFLICT (user_id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger only if it doesn't exist
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Updated_at trigger helper (create if not exists)
+CREATE OR REPLACE FUNCTION public.update_updated_at()
+RETURNS trigger AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS profiles_updated_at ON profiles;
+CREATE TRIGGER profiles_updated_at
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================================
+-- 2. GROUPS
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS groups (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text NOT NULL,
+  owner_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  invite_code text UNIQUE NOT NULL DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 8),
+  created_at timestamptz DEFAULT now()
 );
 
-alter table profiles enable row level security;
-create policy "Users can read own profile" on profiles for select using (auth.uid() = user_id);
-create policy "Users can update own profile" on profiles for update using (auth.uid() = user_id);
+ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
 
--- Auto-create profile on signup
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (user_id, display_name)
-  values (new.id, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)));
-  return new;
-end;
-$$ language plpgsql security definer;
+DROP POLICY IF EXISTS "Members can view groups" ON groups;
+CREATE POLICY "Members can view groups" ON groups
+  FOR SELECT USING (
+    id IN (SELECT group_id FROM group_members WHERE user_id = auth.uid())
+  );
 
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
+DROP POLICY IF EXISTS "Owner can update group" ON groups;
+CREATE POLICY "Owner can update group" ON groups
+  FOR UPDATE USING (owner_id = auth.uid());
 
--- Auto-update updated_at
-create trigger profiles_updated_at
-  before update on profiles
-  for each row execute function update_updated_at();
+DROP POLICY IF EXISTS "Owner can delete group" ON groups;
+CREATE POLICY "Owner can delete group" ON groups
+  FOR DELETE USING (owner_id = auth.uid());
 
--- 2. Groups
-create table groups (
-  id uuid default gen_random_uuid() primary key,
-  name text not null,
-  owner_id uuid not null references auth.users(id) on delete cascade,
-  invite_code text unique not null default substr(replace(gen_random_uuid()::text, '-', ''), 1, 8),
-  created_at timestamptz default now()
+DROP POLICY IF EXISTS "Users can create groups" ON groups;
+CREATE POLICY "Users can create groups" ON groups
+  FOR INSERT WITH CHECK (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS "Anyone can lookup by invite code" ON groups;
+CREATE POLICY "Anyone can lookup by invite code" ON groups
+  FOR SELECT USING (true);
+
+-- ============================================================
+-- 3. GROUP MEMBERS
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS group_members (
+  group_id uuid NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role text NOT NULL DEFAULT 'member' CHECK (role IN ('owner', 'member')),
+  joined_at timestamptz DEFAULT now(),
+  PRIMARY KEY (group_id, user_id)
 );
 
-alter table groups enable row level security;
+ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
 
--- Members can see their groups
-create policy "Members can view groups" on groups
-  for select using (
-    id in (select group_id from group_members where user_id = auth.uid())
+DROP POLICY IF EXISTS "Members can view memberships" ON group_members;
+CREATE POLICY "Members can view memberships" ON group_members
+  FOR SELECT USING (
+    group_id IN (SELECT group_id FROM group_members gm WHERE gm.user_id = auth.uid())
   );
--- Owner can update/delete
-create policy "Owner can update group" on groups
-  for update using (owner_id = auth.uid());
-create policy "Owner can delete group" on groups
-  for delete using (owner_id = auth.uid());
--- Paid users can create groups
-create policy "Users can create groups" on groups
-  for insert with check (auth.uid() = owner_id);
 
--- Anyone can look up a group by invite_code (for join flow)
-create policy "Anyone can lookup by invite code" on groups
-  for select using (true);
-
--- 3. Group members
-create table group_members (
-  group_id uuid not null references groups(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  role text not null default 'member' check (role in ('owner', 'member')),
-  joined_at timestamptz default now(),
-  primary key (group_id, user_id)
-);
-
-alter table group_members enable row level security;
-
-create policy "Members can view memberships" on group_members
-  for select using (
-    group_id in (select group_id from group_members gm where gm.user_id = auth.uid())
+DROP POLICY IF EXISTS "Owner can manage members" ON group_members;
+CREATE POLICY "Owner can manage members" ON group_members
+  FOR ALL USING (
+    group_id IN (SELECT id FROM groups WHERE owner_id = auth.uid())
   );
-create policy "Owner can manage members" on group_members
-  for all using (
-    group_id in (select id from groups where owner_id = auth.uid())
-  );
-create policy "Users can join" on group_members
-  for insert with check (auth.uid() = user_id);
-create policy "Users can leave" on group_members
-  for delete using (auth.uid() = user_id);
 
--- 4. Add group_id to ideas
-alter table ideas add column group_id uuid references groups(id) on delete set null;
+DROP POLICY IF EXISTS "Users can join" ON group_members;
+CREATE POLICY "Users can join" ON group_members
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Update RLS: users can see ideas from their groups too
-drop policy if exists "Users can view own ideas" on ideas;
-create policy "Users can view own and group ideas" on ideas
-  for select using (
+DROP POLICY IF EXISTS "Users can leave" ON group_members;
+CREATE POLICY "Users can leave" ON group_members
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- ============================================================
+-- 4. ADD group_id TO IDEAS
+-- ============================================================
+
+ALTER TABLE ideas ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES groups(id) ON DELETE SET NULL;
+
+-- Update RLS for group ideas
+DROP POLICY IF EXISTS "Users can view own ideas" ON ideas;
+DROP POLICY IF EXISTS "Users can view own and group ideas" ON ideas;
+CREATE POLICY "Users can view own and group ideas" ON ideas
+  FOR SELECT USING (
     auth.uid() = user_id
-    or group_id in (select group_id from group_members where user_id = auth.uid())
+    OR group_id IN (SELECT group_id FROM group_members WHERE user_id = auth.uid())
   );
 
--- Index for group ideas
-create index ideas_group_idx on ideas (group_id) where group_id is not null;
+CREATE INDEX IF NOT EXISTS ideas_group_idx ON ideas (group_id) WHERE group_id IS NOT NULL;
 
--- 5. Join group function (bypasses RLS safely)
-create or replace function public.join_group_by_code(code text)
-returns json as $$
-declare
+-- ============================================================
+-- 5. JOIN GROUP FUNCTION
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.join_group_by_code(code text)
+RETURNS json AS $$
+DECLARE
   g record;
   already_member boolean;
-begin
-  select * into g from groups where invite_code = code;
-  if g.id is null then
-    return json_build_object('error', 'Invalid invite code');
-  end if;
+BEGIN
+  SELECT * INTO g FROM groups WHERE invite_code = code;
+  IF g.id IS NULL THEN
+    RETURN json_build_object('error', 'Invalid invite code');
+  END IF;
 
-  select exists(select 1 from group_members where group_id = g.id and user_id = auth.uid()) into already_member;
-  if already_member then
-    return json_build_object('error', 'Already a member', 'group_id', g.id, 'group_name', g.name);
-  end if;
+  SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = g.id AND user_id = auth.uid()) INTO already_member;
+  IF already_member THEN
+    RETURN json_build_object('error', 'Already a member', 'group_id', g.id, 'group_name', g.name);
+  END IF;
 
-  insert into group_members (group_id, user_id, role) values (g.id, auth.uid(), 'member');
-  return json_build_object('success', true, 'group_id', g.id, 'group_name', g.name);
-end;
-$$ language plpgsql security definer;
+  INSERT INTO group_members (group_id, user_id, role) VALUES (g.id, auth.uid(), 'member');
+  RETURN json_build_object('success', true, 'group_id', g.id, 'group_name', g.name);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================
+-- 6. BACKFILL: Ensure existing users have a profile row
+-- ============================================================
+
+INSERT INTO profiles (user_id, display_name)
+SELECT id, split_part(email, '@', 1)
+FROM auth.users
+WHERE id NOT IN (SELECT user_id FROM profiles WHERE user_id IS NOT NULL)
+ON CONFLICT DO NOTHING;

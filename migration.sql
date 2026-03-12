@@ -6,6 +6,12 @@
 -- ============================================================
 
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+-- Ensure unique constraint on user_id for ON CONFLICT to work
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'profiles_user_id_key') THEN
+    ALTER TABLE profiles ADD CONSTRAINT profiles_user_id_key UNIQUE (user_id);
+  END IF;
+END $$;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS display_name text;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_customer_id text;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan text DEFAULT 'free';
@@ -126,11 +132,14 @@ CREATE TRIGGER profiles_updated_at
   BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+-- Ensure id column has a default so INSERTs without explicit id work
+ALTER TABLE profiles ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, display_name)
-  VALUES (new.id, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)))
+  INSERT INTO public.profiles (id, user_id, display_name)
+  VALUES (gen_random_uuid(), new.id, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)))
   ON CONFLICT (user_id) DO NOTHING;
   RETURN new;
 END;
@@ -167,8 +176,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 5. BACKFILL: Ensure existing users have a profile row
 -- ============================================================
 
-INSERT INTO profiles (user_id, display_name)
-SELECT id, split_part(email, '@', 1)
+INSERT INTO profiles (id, user_id, display_name)
+SELECT gen_random_uuid(), id, split_part(email, '@', 1)
 FROM auth.users
 WHERE id NOT IN (SELECT user_id FROM profiles WHERE user_id IS NOT NULL)
 ON CONFLICT DO NOTHING;
